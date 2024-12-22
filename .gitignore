@@ -1,1 +1,3 @@
 .idea
+rvga/src/main/resources/*.env
+rvga/src/main/resources/application.properties

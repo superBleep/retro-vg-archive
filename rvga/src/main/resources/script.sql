@@ -7,12 +7,13 @@ DROP TABLE IF EXISTS rvga.game CASCADE;
 DROP TABLE IF EXISTS rvga.platform CASCADE;
 DROP TABLE IF EXISTS rvga.emulator_platform CASCADE;
 DROP TABLE IF EXISTS rvga.emulator CASCADE;
+DROP TABLE IF EXISTS rvga.review CASCADE;
 
-CREATE TYPE rvga.archive_role AS ENUM ('regular', 'moderator', 'admin');  
+CREATE TYPE rvga.archive_role AS ENUM ('regular', 'moderator', 'admin');
 
 CREATE TABLE rvga.archive_user (
 	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	creation_date DATE NOT NULL,
+	creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	username VARCHAR(30) UNIQUE NOT NULL,
 	email VARCHAR(70) UNIQUE NOT NULL,
 	password VARCHAR(70) NOT NULL,
@@ -30,7 +31,7 @@ CREATE TABLE rvga.platform (
 
 CREATE TABLE rvga.game (
 	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	title VARCHAR(100) UNIQUE NOT NULL,
+	title VARCHAR(100) NOT NULL,
 	developer VARCHAR(70) NOT NULL,
 	publisher VARCHAR(70) NOT NULL,
 	platform_id BIGINT REFERENCES rvga.platform(id) NOT NULL,
@@ -38,10 +39,10 @@ CREATE TABLE rvga.game (
 );
 
 CREATE TABLE rvga.game_version (
-	id BIGINT GENERATED ALWAYS AS IDENTITY,
+	id VARCHAR(30),
 	game_id BIGINT REFERENCES rvga.game(id),
 	release DATE NOT NULL,
-	notes TEXT,
+	notes TEXT NOT NULL,
 	PRIMARY KEY (id, game_id)
 );
 
@@ -59,4 +60,14 @@ CREATE TABLE rvga.emulator_platform (
 	PRIMARY KEY (emulator_id, platform_id)
 );
 
-
+CREATE TABLE rvga.review (
+	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	user_id BIGINT REFERENCES rvga.archive_user(id) NOT NULL,
+	version_id VARCHAR(30) NOT NULL,
+	game_id BIGINT NOT NULL,
+	creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	emulator_id BIGINT REFERENCES rvga.emulator(id),
+	rating SMALLINT NOT NULL,
+	comment TEXT,
+	FOREIGN KEY (version_id, game_id) REFERENCES rvga.game_version (id, game_id)
+);
