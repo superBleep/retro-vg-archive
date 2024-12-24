@@ -4,3 +4,4 @@ spring.datasource.url=?
 spring.datasource.username=?
 spring.datasource.password=?
 spring.jpa.hibernate.ddl-auto=?
+springdoc.default-produces-media-type=application/json
