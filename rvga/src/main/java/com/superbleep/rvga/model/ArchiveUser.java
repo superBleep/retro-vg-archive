@@ -1,6 +1,9 @@
 package com.superbleep.rvga.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
@@ -12,25 +15,39 @@ public class ArchiveUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "creation_date", columnDefinition="TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "creation_date")
+    @CreationTimestamp
     private Timestamp creationDate;
-    @Column(name = "username")
+    @Column(name = "username", unique = true)
+    @NotNull
     private String username;
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
+    @NotNull
+    @Email
     private String email;
     @Column(name = "password")
+    @NotNull
     private String password;
     @Column(name = "first_name")
     private String firstName;
     @Column(name = "last_name")
     private String lastName;
-    @Enumerated(EnumType.STRING)
     @Column(name = "role")
+    @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
+    @NotNull
     private ArchiveUserRole role;
 
     public ArchiveUser() {
+    }
 
+    public ArchiveUser(String username, String email, String password, String firstName, String lastName, ArchiveUserRole role) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.role = role;
     }
 
     public long getId() {

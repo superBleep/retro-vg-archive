@@ -13,7 +13,7 @@ CREATE TYPE rvga.archive_role AS ENUM ('regular', 'moderator', 'admin');
 
 CREATE TABLE rvga.archive_user (
 	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	username VARCHAR(30) UNIQUE NOT NULL,
 	email VARCHAR(70) UNIQUE NOT NULL,
 	password VARCHAR(70) NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE rvga.review (
 	user_id BIGINT REFERENCES rvga.archive_user(id) NOT NULL,
 	version_id VARCHAR(30) NOT NULL,
 	game_id BIGINT NOT NULL,
-	creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	emulator_id BIGINT REFERENCES rvga.emulator(id),
 	rating SMALLINT NOT NULL,
 	comment TEXT,
