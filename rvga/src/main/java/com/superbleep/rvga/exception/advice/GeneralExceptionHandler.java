@@ -23,7 +23,7 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GeneralExceptionHandler {
-    @ExceptionHandler({ArchiveUserNotFound.class})
+    @ExceptionHandler({ArchiveUserNotFound.class, PlatformNotFound.class})
     public ResponseEntity<Object> handle(NotFoundException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 
@@ -66,7 +66,8 @@ public class GeneralExceptionHandler {
             ArchiveUserPasswordsIdentical.class,
             ArchiveUserEmptyBody.class,
             ArchiveUserRolesIdentical.class,
-            ArchiveUserRoleNotFound.class
+            ArchiveUserRoleNotFound.class,
+            PlatformEmptyBody.class
     })
     public ResponseEntity<Object> handle(BadRequestException e) {
         MessageResponse res = new MessageResponse(e.getMessage());

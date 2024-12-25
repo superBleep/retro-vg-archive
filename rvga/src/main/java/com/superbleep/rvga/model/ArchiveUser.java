@@ -2,6 +2,7 @@ package com.superbleep.rvga.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
@@ -19,14 +20,15 @@ public class ArchiveUser {
     @CreationTimestamp
     private Timestamp creationDate;
     @Column(name = "username", unique = true)
-    @NotNull
+    @NotBlank
     private String username;
     @Column(name = "email", unique = true)
-    @NotNull
+    @NotBlank
     @Email
     private String email;
     @Column(name = "password")
-    @NotNull
+    @NotBlank
+
     private String password;
     @Column(name = "first_name")
     private String firstName;
