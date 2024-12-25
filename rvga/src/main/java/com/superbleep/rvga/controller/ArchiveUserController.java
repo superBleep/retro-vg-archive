@@ -61,7 +61,7 @@ public class ArchiveUserController {
     @ApiResponse(responseCode = "200", description = "Users returned successfully")
     @GetMapping
     public List<ArchiveUser> getAll() {
-        return archiveUserService.get();
+        return archiveUserService.getAll();
     }
 
     @Operation(
@@ -120,34 +120,7 @@ public class ArchiveUserController {
             @PathVariable Long id,
             @Valid @RequestBody ArchiveUserUpdate newUser
     ) {
-        ArchiveUser oldUser = archiveUserService.getById(id);
-
-        if(
-            newUser.getUsername() == null &&
-            newUser.getEmail() == null &&
-            newUser.getFirstName() == null &&
-            newUser.getLastName() == null
-        ) {
-            throw new ArchiveUserEmptyBody();
-        }
-
-        if(newUser.getUsername() == null) {
-            newUser.setUsername(oldUser.getUsername());
-        }
-
-        if(newUser.getEmail() == null) {
-            newUser.setEmail(oldUser.getEmail());
-        }
-
-        if(newUser.getFirstName() == null) {
-            newUser.setFirstName(oldUser.getFirstName());
-        }
-
-        if(newUser.getLastName() == null) {
-            newUser.setLastName(oldUser.getFirstName());
-        }
-
-        archiveUserService.modifyData(newUser, oldUser.getId());
+        archiveUserService.modifyData(newUser, id);
 
         MessageResponse res = new MessageResponse(STR."Modified data for user with id \{id}");
         return ResponseEntity.ok(res);
@@ -183,13 +156,7 @@ public class ArchiveUserController {
             @PathVariable Long id,
             @NotNull @RequestBody String newPassword
     ) {
-        ArchiveUser oldUser = archiveUserService.getById(id);
-
-        if(oldUser.getPassword().equals(newPassword)) {
-            throw new ArchiveUserPasswordsIdentical();
-        }
-
-        archiveUserService.modifyPassword(newPassword, oldUser.getId());
+        archiveUserService.modifyPassword(newPassword, id);
 
         MessageResponse res = new MessageResponse(STR."Modified password for user with id \{id}");
         return ResponseEntity.ok(res);
@@ -214,7 +181,7 @@ public class ArchiveUserController {
                             schema = @Schema(implementation = MessageResponse.class)
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "Malformed request body",
+            @ApiResponse(responseCode = "400", description = "Malformed request body / User role not found",
                     content = @Content(
                             schema = @Schema(implementation = MessageResponse.class)
                     )
@@ -230,32 +197,11 @@ public class ArchiveUserController {
             @PathVariable Long id,
             @NotNull @RequestBody String newRoleString
     ) {
-        ArchiveUser oldUser = archiveUserService.getById(id);
+        archiveUserService.modifyRole(newRoleString, id);
 
-        if(oldUser.getRole() != ArchiveUserRole.admin) {
-            throw new ArchiveUserRolesForbidden();
-        }
+        ArchiveUserRole oldRole = archiveUserService.getById(id).getRole();
 
-        ArchiveUserRole newRole = null;
-
-        for (ArchiveUserRole role : ArchiveUserRole.values()) {
-            if (role.name().equals(newRoleString)) {
-                newRole = role;
-                break;
-            }
-        }
-
-        if(newRole == null) {
-            throw new ArchiveUserRoleNotFound();
-        }
-
-        if(oldUser.getRole().equals(newRole)) {
-            throw new ArchiveUserRolesIdentical();
-        }
-
-        archiveUserService.modifyRole(newRole, oldUser.getId());
-
-        MessageResponse res = new MessageResponse(STR."Changed role of user \{id} from \{oldUser.getRole()} to \{newRole}");
+        MessageResponse res = new MessageResponse(STR."Changed role of user \{id} from \{oldRole} to \{newRoleString}");
         return ResponseEntity.ok(res);
     }
 
@@ -281,7 +227,6 @@ public class ArchiveUserController {
     })
     @DeleteMapping(value = "/{id}", produces = "application/json")
     public ResponseEntity<Object> delete(@PathVariable Long id) {
-        archiveUserService.getById(id);
         archiveUserService.delete(id);
 
         MessageResponse res = new MessageResponse(STR."Deleted user with id \{id}");

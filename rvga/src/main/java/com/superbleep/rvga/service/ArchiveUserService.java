@@ -1,6 +1,6 @@
 package com.superbleep.rvga.service;
 
-import com.superbleep.rvga.exception.ArchiveUserNotFound;
+import com.superbleep.rvga.exception.*;
 import com.superbleep.rvga.model.ArchiveUser;
 import com.superbleep.rvga.model.ArchiveUserRole;
 import com.superbleep.rvga.model.ArchiveUserUpdate;
@@ -24,7 +24,7 @@ public class ArchiveUserService {
         return archiveUserRepository.save(archiveUser);
     }
 
-    public List<ArchiveUser> get() {
+    public List<ArchiveUser> getAll() {
         return archiveUserRepository.findAll();
     }
 
@@ -39,28 +39,86 @@ public class ArchiveUserService {
     }
 
     @Transactional
-    public void modifyData(ArchiveUserUpdate archiveUserUpdate, long id) {
+    public void modifyData(ArchiveUserUpdate newUser, long id) {
+        ArchiveUser oldUser = this.getById(id);
+
+        if(
+            newUser.getUsername() == null &&
+            newUser.getEmail() == null &&
+            newUser.getFirstName() == null &&
+            newUser.getLastName() == null
+        ) {
+            throw new ArchiveUserEmptyBody();
+        }
+
+        if(newUser.getUsername() == null) {
+            newUser.setUsername(oldUser.getUsername());
+        }
+
+        if(newUser.getEmail() == null) {
+            newUser.setEmail(oldUser.getEmail());
+        }
+
+        if(newUser.getFirstName() == null) {
+            newUser.setFirstName(oldUser.getFirstName());
+        }
+
+        if(newUser.getLastName() == null) {
+            newUser.setLastName(oldUser.getFirstName());
+        }
+
         archiveUserRepository.modifyData(
-                archiveUserUpdate.getUsername(),
-                archiveUserUpdate.getEmail(),
-                archiveUserUpdate.getFirstName(),
-                archiveUserUpdate.getLastName(),
+                newUser.getUsername(),
+                newUser.getEmail(),
+                newUser.getFirstName(),
+                newUser.getLastName(),
                 id
         );
     }
 
     @Transactional
-    public void modifyPassword(String password, long id) {
-        archiveUserRepository.modifyPassword(password, id);
+    public void modifyPassword(String newPassword, long id) {
+        ArchiveUser oldUser = this.getById(id);
+
+        if(oldUser.getPassword().equals(newPassword)) {
+            throw new ArchiveUserPasswordsIdentical();
+        }
+
+        archiveUserRepository.modifyPassword(newPassword, id);
     }
 
     @Transactional
-    public void modifyRole(ArchiveUserRole role, long id) {
-        archiveUserRepository.modifyRole(role, id);
+    public void modifyRole(String newRoleString, long id) {
+        ArchiveUser oldUser = this.getById(id);
+
+        if(oldUser.getRole() != ArchiveUserRole.admin) {
+            throw new ArchiveUserRolesForbidden();
+        }
+
+        ArchiveUserRole newRole = null;
+
+        for (ArchiveUserRole role : ArchiveUserRole.values()) {
+            if (role.name().equals(newRoleString)) {
+                newRole = role;
+                break;
+            }
+        }
+
+        if(newRole == null) {
+            throw new ArchiveUserRoleNotFound();
+        }
+
+        if(oldUser.getRole().equals(newRole)) {
+            throw new ArchiveUserRolesIdentical();
+        }
+
+        archiveUserRepository.modifyRole(newRole, id);
     }
 
     @Transactional
     public void delete(long id) {
+        this.getById(id);
+
         archiveUserRepository.deleteById(id);
     }
 }

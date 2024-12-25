@@ -41,6 +41,17 @@ public class ArchiveUser {
     public ArchiveUser() {
     }
 
+    public ArchiveUser(long id, Timestamp creationDate, String username, String email, String password, String firstName, String lastName, ArchiveUserRole role) {
+        this.id = id;
+        this.creationDate = creationDate;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.role = role;
+    }
+
     public ArchiveUser(String username, String email, String password, String firstName, String lastName, ArchiveUserRole role) {
         this.username = username;
         this.email = email;
