@@ -7,6 +7,8 @@ import com.superbleep.rvga.exception.general.NotFoundException;
 import com.superbleep.rvga.util.InvalidFieldsResponse;
 import com.superbleep.rvga.util.MessageResponse;
 import com.superbleep.rvga.util.SqlResponse;
+import org.springframework.beans.TypeMismatchException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +26,7 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GeneralExceptionHandler {
-    @ExceptionHandler({ArchiveUserNotFound.class, PlatformNotFound.class})
+    @ExceptionHandler({ArchiveUserNotFound.class, PlatformNotFound.class, GameNotFound.class})
     public ResponseEntity<Object> handle(NotFoundException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 
@@ -32,10 +35,10 @@ public class GeneralExceptionHandler {
                 .body(res);
     }
 
-    @ExceptionHandler({DataIntegrityViolationException.class})
-    public ResponseEntity<Object> handle(DataIntegrityViolationException e) {
+    @ExceptionHandler({DataIntegrityViolationException.class, GameIdenticalFound.class})
+    public ResponseEntity<Object> handle(DataAccessException e) {
         SqlResponse res = new SqlResponse(
-                "There's already an identical entity in the database",
+                "Deteceted conflict in the database",
                 e.getMostSpecificCause().getMessage()
         );
 
@@ -61,13 +64,22 @@ public class GeneralExceptionHandler {
                 .body(res);
     }
 
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<Object> handle(TypeMismatchException e) {
+        MessageResponse res = new MessageResponse(STR."Value \{e.getValue()} of parameter \{e.getPropertyName()} is invalid.");
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(res);
+    }
+
     @ExceptionHandler({
             HttpMessageNotReadableException.class,
             ArchiveUserPasswordsIdentical.class,
             ArchiveUserEmptyBody.class,
             ArchiveUserRolesIdentical.class,
             ArchiveUserRoleNotFound.class,
-            PlatformEmptyBody.class
+            PlatformEmptyBody.class,
     })
     public ResponseEntity<Object> handle(BadRequestException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
