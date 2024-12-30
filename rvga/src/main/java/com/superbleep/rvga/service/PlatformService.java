@@ -1,11 +1,9 @@
 package com.superbleep.rvga.service;
 
-import com.superbleep.rvga.exception.ArchiveUserNotFound;
 import com.superbleep.rvga.exception.PlatformEmptyBody;
 import com.superbleep.rvga.exception.PlatformNotFound;
-import com.superbleep.rvga.model.ArchiveUser;
 import com.superbleep.rvga.model.Platform;
-import com.superbleep.rvga.model.PlatformUpdate;
+import com.superbleep.rvga.dto.PlatformPatch;
 import com.superbleep.rvga.repository.PlatformRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -33,43 +31,30 @@ public class PlatformService {
     public Platform getById(long id) {
         Optional<Platform> platformOptional = platformRepository.findById(id);
 
-        if(platformOptional.isPresent()) {
+        if(platformOptional.isPresent())
             return platformOptional.get();
-        } else {
+        else
             throw new PlatformNotFound(id);
-        }
     }
 
     @Transactional
-    public void modifyData(PlatformUpdate newPlatform, long id) {
+    public void modifyData(PlatformPatch newPlatform, long id) {
         Platform oldPlatform = this.getById(id);
 
-        if(
-            newPlatform.getName() == null &&
-            newPlatform.getManufacturer() == null &&
-            newPlatform.getRelease() == null
-        ) {
+        if(newPlatform.getName() == null && newPlatform.getManufacturer() == null && newPlatform.getRelease() == null)
             throw new PlatformEmptyBody();
-        }
 
-        if(newPlatform.getName() == null) {
+        if(newPlatform.getName() == null)
             newPlatform.setName(oldPlatform.getName());
-        }
 
-        if(newPlatform.getManufacturer() == null) {
+        if(newPlatform.getManufacturer() == null)
             newPlatform.setManufacturer(oldPlatform.getManufacturer());
-        }
 
-        if(newPlatform.getRelease() == null) {
+        if(newPlatform.getRelease() == null)
             newPlatform.setRelease(oldPlatform.getRelease());
-        }
 
-        platformRepository.modifyData(
-                newPlatform.getName(),
-                newPlatform.getManufacturer(),
-                newPlatform.getRelease(),
-                id
-        );
+        platformRepository.modifyData(newPlatform.getName(), newPlatform.getManufacturer(), newPlatform.getRelease(),
+                id);
     }
 
     @Transactional

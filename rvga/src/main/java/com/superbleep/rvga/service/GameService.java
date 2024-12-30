@@ -46,21 +46,19 @@ public class GameService {
     public Game getById(long id) {
         Optional<Game> gameOptional = gameRepository.findById(id);
 
-        if(gameOptional.isPresent()) {
+        if(gameOptional.isPresent())
             return gameOptional.get();
-        } else {
+        else
             throw new GameNotFound(id);
-        }
     }
 
     public Game getByIdFull(long id) {
         Optional<Game> gameOptional = gameRepository.findByIdWithPlatform(id);
 
-        if(gameOptional.isPresent()) {
+        if(gameOptional.isPresent())
             return gameOptional.get();
-        } else {
+        else
             throw new GameNotFound(id);
-        }
     }
 
     @Transactional
@@ -68,22 +66,16 @@ public class GameService {
         Game oldGame = this.getById(id);
         Platform newPlatform;
 
-        if(
-            newGame.getTitle() == null &&
-            newGame.getDeveloper() == null &&
-            newGame.getPublisher() == null &&
-            newGame.getPlatformId() == null
-        ) {
+        if(newGame.getTitle() == null && newGame.getDeveloper() == null && newGame.getPublisher() == null &&
+            newGame.getPlatformId() == null)
             throw new GameEmptyBody();
-        }
 
-        if(newGame.getTitle() == null) {
+        if(newGame.getTitle() == null)
             newGame.setTitle(oldGame.getTitle());
-        }
 
-        if(newGame.getPlatformId() == null) {
+        if(newGame.getPlatformId() == null)
             newPlatform = oldGame.getPlatform();
-        } else {
+        else {
             Long newPlatformId = newGame.getPlatformId();
 
             List<Game> games = gameRepository.findAllByTitleWithPlatform(newGame.getTitle());
@@ -95,26 +87,17 @@ public class GameService {
             newPlatform = this.platformService.getById(newPlatformId);
         }
 
-        if(newGame.getDeveloper() == null) {
+        if(newGame.getDeveloper() == null)
             newGame.setDeveloper(oldGame.getDeveloper());
-        }
 
-        if(newGame.getPublisher() == null) {
+        if(newGame.getPublisher() == null)
             newGame.setPublisher(oldGame.getPublisher());
-        }
 
-        if(newGame.getGenre() == null) {
+        if(newGame.getGenre() == null)
             newGame.setGenre(oldGame.getGenre());
-        }
 
-        gameRepository.modifyData(
-                newGame.getTitle(),
-                newGame.getDeveloper(),
-                newGame.getPublisher(),
-                newPlatform,
-                newGame.getGenre(),
-                id
-        );
+        gameRepository.modifyData(newGame.getTitle(), newGame.getDeveloper(), newGame.getPublisher(), newPlatform,
+                newGame.getGenre(), id);
     }
 
     @Transactional

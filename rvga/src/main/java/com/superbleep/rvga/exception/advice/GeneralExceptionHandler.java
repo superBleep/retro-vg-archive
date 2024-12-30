@@ -37,10 +37,8 @@ public class GeneralExceptionHandler {
 
     @ExceptionHandler({DataIntegrityViolationException.class, GameIdenticalFound.class})
     public ResponseEntity<Object> handle(DataAccessException e) {
-        SqlResponse res = new SqlResponse(
-                "Deteceted conflict in the database",
-                e.getMostSpecificCause().getMessage()
-        );
+        SqlResponse res = new SqlResponse("Deteceted conflict in the database",
+                e.getMostSpecificCause().getMessage());
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -53,9 +51,8 @@ public class GeneralExceptionHandler {
         BindingResult bRes = e.getBindingResult();
         List<FieldError> invalidFields = bRes.getFieldErrors();
 
-        for (FieldError invalidField : invalidFields) {
+        for (FieldError invalidField : invalidFields)
             errors.put(invalidField.getField(), invalidField.getDefaultMessage());
-        }
 
         InvalidFieldsResponse res = new InvalidFieldsResponse(errors);
 
@@ -73,14 +70,9 @@ public class GeneralExceptionHandler {
                 .body(res);
     }
 
-    @ExceptionHandler({
-            HttpMessageNotReadableException.class,
-            ArchiveUserPasswordsIdentical.class,
-            ArchiveUserEmptyBody.class,
-            ArchiveUserRolesIdentical.class,
-            ArchiveUserRoleNotFound.class,
-            PlatformEmptyBody.class,
-    })
+    @ExceptionHandler({HttpMessageNotReadableException.class, ArchiveUserPasswordsIdentical.class,
+            ArchiveUserEmptyBody.class, ArchiveUserRolesIdentical.class, ArchiveUserRoleNotFound.class,
+            PlatformEmptyBody.class})
     public ResponseEntity<Object> handle(BadRequestException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 

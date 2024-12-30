@@ -1,23 +1,16 @@
-package com.superbleep.rvga.model;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+package com.superbleep.rvga.dto;
 
 import java.util.Date;
 
-public class PlatformUpdate {
+public class PlatformPatch {
     private String name;
     private String manufacturer;
     private Date release;
 
-    public PlatformUpdate() {
+    public PlatformPatch() {
     }
 
-    public PlatformUpdate(String name, String manufacturer, Date release) {
+    public PlatformPatch(String name, String manufacturer, Date release) {
         this.name = name;
         this.manufacturer = manufacturer;
         this.release = release;

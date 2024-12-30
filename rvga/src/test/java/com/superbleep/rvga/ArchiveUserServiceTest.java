@@ -3,7 +3,7 @@ package com.superbleep.rvga;
 import com.superbleep.rvga.exception.*;
 import com.superbleep.rvga.model.ArchiveUser;
 import com.superbleep.rvga.model.ArchiveUserRole;
-import com.superbleep.rvga.model.ArchiveUserUpdate;
+import com.superbleep.rvga.dto.ArchiveUserPatch;
 import com.superbleep.rvga.repository.ArchiveUserRepository;
 import com.superbleep.rvga.service.ArchiveUserService;
 import org.junit.jupiter.api.Test;
@@ -33,24 +33,11 @@ public class ArchiveUserServiceTest {
     @Test
     void whenBodyIsValid_create_savesArchiveUser() {
         // Arrange
-        ArchiveUser archiveUser = new ArchiveUser(
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
+        ArchiveUser archiveUser = new ArchiveUser("testUsername", "test@email.com", "1234",
+                "Test", "Test", ArchiveUserRole.regular);
         ArchiveUser savedArchiveUser = new ArchiveUser(
-                1,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
+                1, new Timestamp(System.currentTimeMillis()), "testUsername", "test@email.com",
+                "1234", "Test", "Test", ArchiveUserRole.regular);
 
         when(archiveUserRepository.save(archiveUser)).thenReturn(savedArchiveUser);
 
@@ -66,20 +53,17 @@ public class ArchiveUserServiceTest {
     @Test
     void whenBodyIsValid_create_throwsDataIntegrityViolation() {
         // Arrange
-        ArchiveUser archiveUser = new ArchiveUser(
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
-        String sqlErrorMsg = "ERROR: duplicate key value violates unique constraint \"archive_user_username_key\"\n  Detail: Key (username)=(testUsername) already exists.";
+        ArchiveUser archiveUser = new ArchiveUser("testUsername", "test@email.com", "1234",
+                "Test", "Test", ArchiveUserRole.regular);
+        String sqlErrorMsg = "ERROR: duplicate key value violates unique constraint \"archive_user_username_key\"\n" +
+                "  Detail: Key (username)=(testUsername) already exists.";
 
-        when(archiveUserRepository.save(archiveUser)).thenThrow(new DataIntegrityViolationException("", new Throwable(sqlErrorMsg)));
+        when(archiveUserRepository.save(archiveUser)).thenThrow(new DataIntegrityViolationException("",
+                new Throwable(sqlErrorMsg)));
 
         // Act / Assert
-        Exception exception = assertThrows(DataIntegrityViolationException.class, () -> archiveUserService.create(archiveUser));
+        Exception exception = assertThrows(DataIntegrityViolationException.class,
+                () -> archiveUserService.create(archiveUser));
         assertEquals(exception.getCause().getMessage(), sqlErrorMsg);
 
         verify(archiveUserRepository).save(archiveUser);
@@ -88,26 +72,12 @@ public class ArchiveUserServiceTest {
     @Test
     void getAll_returnsAllArchiveUsers() {
         // Arrange
-        ArchiveUser archiveUser1 = new ArchiveUser(
-                1,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
-        ArchiveUser archiveUser2 = new ArchiveUser(
-                2,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername2",
-                "test2t@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
+        ArchiveUser archiveUser1 = new ArchiveUser(1, new Timestamp(System.currentTimeMillis()),
+                "testUsername", "test@email.com", "1234", "Test", "Test",
+                ArchiveUserRole.regular);
+        ArchiveUser archiveUser2 = new ArchiveUser(2, new Timestamp(System.currentTimeMillis()),
+                "testUsername2", "test2t@email.com", "1234", "Test", "Test",
+                ArchiveUserRole.regular);
 
         when(archiveUserRepository.findAll()).thenReturn(List.of(archiveUser1, archiveUser2));
 
@@ -123,16 +93,9 @@ public class ArchiveUserServiceTest {
     @Test
     void whenUserFound_getById_returnsArchiveUser() {
         // Arrange
-        ArchiveUser archiveUser = new ArchiveUser(
-                1,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
+        ArchiveUser archiveUser = new ArchiveUser(1, new Timestamp(System.currentTimeMillis()),
+                "testUsername", "test@email.com", "1234", "Test", "Test",
+                ArchiveUserRole.regular);
         Optional<ArchiveUser> archiveUserOptional = Optional.of(archiveUser);
 
         when(archiveUserRepository.findById(1L)).thenReturn(archiveUserOptional);
@@ -164,22 +127,10 @@ public class ArchiveUserServiceTest {
     void whenBodyIsValid_modifyData_modifiesData() {
         // Arrrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
-        ArchiveUserUpdate newUser = new ArchiveUserUpdate(
-            "test1Username",
-            "test1@email.com",
-            "Test1",
-            "Test1"
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.regular);
+        ArchiveUserPatch newUser = new ArchiveUserPatch("test1Username", "test1@email.com",
+                "Test1", "Test1");
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
 
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
@@ -189,25 +140,16 @@ public class ArchiveUserServiceTest {
 
         // Assert
         verify(archiveUserRepository).findById(id);
-        verify(archiveUserRepository).modifyData(
-                newUser.getUsername(),
-                newUser.getEmail(),
-                newUser.getFirstName(),
-                newUser.getLastName(),
-                id
-        );
+        verify(archiveUserRepository).modifyData(newUser.getUsername(), newUser.getEmail(), newUser.getFirstName(),
+                newUser.getLastName(), id);
     }
 
     @Test
     void whenUserNotFound_modifyData_throwArchiveUserNotFound() {
         // Arrange
         long id = 1;
-        ArchiveUserUpdate newUser = new ArchiveUserUpdate(
-                "test1Username",
-                "test1@email.com",
-                "Test1",
-                "Test1"
-        );
+        ArchiveUserPatch newUser = new ArchiveUserPatch("test1Username", "test1@email.com",
+                "Test1", "Test1");
         Optional<ArchiveUser> oldUserOptional = Optional.empty();
         String errorMsg = "User with id 1 doesn't exist in the database";
 
@@ -223,17 +165,9 @@ public class ArchiveUserServiceTest {
     void whenBodyIsAllNull_modifyData_throwsArchiveUserEmptyBody() {
         // Arrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
-        ArchiveUserUpdate newUser = new ArchiveUserUpdate(null,null,null,null);
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.regular);
+        ArchiveUserPatch newUser = new ArchiveUserPatch(null,null,null,null);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
         String errorMsg = "Request must modify at least one field";
 
@@ -249,22 +183,10 @@ public class ArchiveUserServiceTest {
     void whenUsernameIsNull_modifyData_modifiesData() {
         // Arrrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
-        ArchiveUserUpdate newUser = new ArchiveUserUpdate(
-                null,
-                "test1@email.com",
-                "Test1",
-                "Test1"
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.regular);
+        ArchiveUserPatch newUser = new ArchiveUserPatch(null, "test1@email.com", "Test1",
+                "Test1");
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
 
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
@@ -274,35 +196,18 @@ public class ArchiveUserServiceTest {
 
         // Assert
         verify(archiveUserRepository).findById(id);
-        verify(archiveUserRepository).modifyData(
-                newUser.getUsername(),
-                newUser.getEmail(),
-                newUser.getFirstName(),
-                newUser.getLastName(),
-                id
-        );
+        verify(archiveUserRepository).modifyData(newUser.getUsername(), newUser.getEmail(), newUser.getFirstName(),
+                newUser.getLastName(), id);
     }
 
     @Test
-    void whenEmailIsNull_modifyData_modifiesData() {
+    void whenAllButUsernameIsNull_modifyData_modifiesData() {
         // Arrrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
-        ArchiveUserUpdate newUser = new ArchiveUserUpdate(
-                "testUsername",
-                null,
-                "Test1",
-                "Test1"
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.regular);
+        ArchiveUserPatch newUser = new ArchiveUserPatch("testUsername1", null, null,
+                null);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
 
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
@@ -312,105 +217,16 @@ public class ArchiveUserServiceTest {
 
         // Assert
         verify(archiveUserRepository).findById(id);
-        verify(archiveUserRepository).modifyData(
-                newUser.getUsername(),
-                newUser.getEmail(),
-                newUser.getFirstName(),
-                newUser.getLastName(),
-                id
-        );
-    }
-
-    @Test
-    void whenFirstNameIsNull_modifyData_modifiesData() {
-        // Arrrange
-        long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
-        ArchiveUserUpdate newUser = new ArchiveUserUpdate(
-                "test1Username",
-                "test1@email.com",
-                null,
-                "Test1"
-        );
-        Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
-
-        when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
-
-        // Act
-        archiveUserService.modifyData(newUser, id);
-
-        // Assert
-        verify(archiveUserRepository).findById(id);
-        verify(archiveUserRepository).modifyData(
-                newUser.getUsername(),
-                newUser.getEmail(),
-                newUser.getFirstName(),
-                newUser.getLastName(),
-                id
-        );
-    }
-
-    @Test
-    void whenLastNameIsNull_modifyData_modifiesData() {
-        // Arrrange
-        long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
-        ArchiveUserUpdate newUser = new ArchiveUserUpdate(
-                "test1Username",
-                "test1@email.com",
-                "Test1",
-                null
-        );
-        Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
-
-        when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
-
-        // Act
-        archiveUserService.modifyData(newUser, id);
-
-        // Assert
-        verify(archiveUserRepository).findById(id);
-        verify(archiveUserRepository).modifyData(
-                newUser.getUsername(),
-                newUser.getEmail(),
-                newUser.getFirstName(),
-                newUser.getLastName(),
-                id
-        );
+        verify(archiveUserRepository).modifyData(newUser.getUsername(), newUser.getEmail(), newUser.getFirstName(),
+                newUser.getLastName(), id);
     }
 
     @Test
     void whenPasswordIsValid_modifyPassword_modifiesPassword() {
         // Arrrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.regular);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
         String newPassword = "12345";
 
@@ -435,7 +251,8 @@ public class ArchiveUserServiceTest {
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
 
         // Act / Assert
-        Exception exception = assertThrows(ArchiveUserNotFound.class, () -> archiveUserService.modifyPassword(newPassword, id));
+        Exception exception = assertThrows(ArchiveUserNotFound.class,
+                () -> archiveUserService.modifyPassword(newPassword, id));
         assertEquals(exception.getMessage(), errorMsg);
         verify(archiveUserRepository).findById(id);
     }
@@ -444,16 +261,8 @@ public class ArchiveUserServiceTest {
     void whenPasswordIdentical_modifyPassword_throwsArchiveUserPasswordsIdentical() {
         // Arrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.regular);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
         String errorMsg = "The new password must be different from the old one";
         String newPassword = "1234";
@@ -461,7 +270,8 @@ public class ArchiveUserServiceTest {
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
 
         // Act / Assert
-        Exception exception = assertThrows(ArchiveUserPasswordsIdentical.class, () -> archiveUserService.modifyPassword(newPassword, id));
+        Exception exception = assertThrows(ArchiveUserPasswordsIdentical.class,
+                () -> archiveUserService.modifyPassword(newPassword, id));
         assertEquals(exception.getMessage(), errorMsg);
         verify(archiveUserRepository).findById(id);
     }
@@ -470,16 +280,8 @@ public class ArchiveUserServiceTest {
     void whenBodyIsValid_modifyRole_modifiesRole() {
         // Arrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.admin
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.admin);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
         String newRoleString = "moderator";
 
@@ -504,7 +306,8 @@ public class ArchiveUserServiceTest {
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
 
         // Act / Assert
-        Exception exception = assertThrows(ArchiveUserNotFound.class, () -> archiveUserService.modifyRole(newRoleString, id));
+        Exception exception = assertThrows(ArchiveUserNotFound.class,
+                () -> archiveUserService.modifyRole(newRoleString, id));
         assertEquals(exception.getMessage(), errorMsg);
         verify(archiveUserRepository).findById(id);
     }
@@ -513,16 +316,8 @@ public class ArchiveUserServiceTest {
     void whenRoleNotStrongEnough_modifyRole_throwsArchiveUserRolesForbidden() {
         // Arrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.regular);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
         String errorMsg = "Only admins can change the roles of other users";
         String newRoleString = "admin";
@@ -530,7 +325,8 @@ public class ArchiveUserServiceTest {
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
 
         // Act / Assert
-        Exception exception = assertThrows(ArchiveUserRolesForbidden.class, () -> archiveUserService.modifyRole(newRoleString, id));
+        Exception exception = assertThrows(ArchiveUserRolesForbidden.class,
+                () -> archiveUserService.modifyRole(newRoleString, id));
         assertEquals(exception.getMessage(), errorMsg);
         verify(archiveUserRepository).findById(id);
     }
@@ -539,16 +335,8 @@ public class ArchiveUserServiceTest {
     void whenRoleNotFound_modifyRole_throwsArchiveUserRoleNotFound() {
         // Arrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.admin
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.admin);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
         String errorMsg = "Request user role not found";
         String newRoleString = "superUser";
@@ -556,7 +344,8 @@ public class ArchiveUserServiceTest {
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
 
         // Act / Assert
-        Exception exception = assertThrows(ArchiveUserRoleNotFound.class, () -> archiveUserService.modifyRole(newRoleString, id));
+        Exception exception = assertThrows(ArchiveUserRoleNotFound.class,
+                () -> archiveUserService.modifyRole(newRoleString, id));
         assertEquals(exception.getMessage(), errorMsg);
         verify(archiveUserRepository).findById(id);
     }
@@ -565,16 +354,8 @@ public class ArchiveUserServiceTest {
     void whenRolesIdentical_modifyRole_throwsArchiveUserRolesIdentical() {
         // Arrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.admin
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.admin);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
         String errorMsg = "The new role must be different from the old one";
         String newRoleString = "admin";
@@ -582,7 +363,8 @@ public class ArchiveUserServiceTest {
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);
 
         // Act / Assert
-        Exception exception = assertThrows(ArchiveUserRolesIdentical.class, () -> archiveUserService.modifyRole(newRoleString, id));
+        Exception exception = assertThrows(ArchiveUserRolesIdentical.class,
+                () -> archiveUserService.modifyRole(newRoleString, id));
         assertEquals(exception.getMessage(), errorMsg);
         verify(archiveUserRepository).findById(id);
     }
@@ -591,16 +373,8 @@ public class ArchiveUserServiceTest {
     void whenUserIsFound_delete_removesUser() {
         // Arrange
         long id = 1;
-        ArchiveUser oldUser = new ArchiveUser(
-                id,
-                new Timestamp(System.currentTimeMillis()),
-                "testUsername",
-                "test@email.com",
-                "1234",
-                "Test",
-                "Test",
-                ArchiveUserRole.regular
-        );
+        ArchiveUser oldUser = new ArchiveUser(id, new Timestamp(System.currentTimeMillis()), "testUsername",
+                "test@email.com", "1234", "Test", "Test", ArchiveUserRole.regular);
         Optional<ArchiveUser> oldUserOptional = Optional.of(oldUser);
 
         when(archiveUserRepository.findById(id)).thenReturn(oldUserOptional);

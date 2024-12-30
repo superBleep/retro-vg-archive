@@ -1,18 +1,18 @@
-package com.superbleep.rvga.model;
+package com.superbleep.rvga.dto;
 
 import jakarta.validation.constraints.Email;
 
-public class ArchiveUserUpdate {
+public class ArchiveUserPatch {
     private String username;
     @Email
     private String email;
     private String firstName;
     private String lastName;
 
-    public ArchiveUserUpdate() {
+    public ArchiveUserPatch() {
     }
 
-    public ArchiveUserUpdate(String username, String email, String firstName, String lastName) {
+    public ArchiveUserPatch(String username, String email, String firstName, String lastName) {
         this.username = username;
         this.email = email;
         this.firstName = firstName;

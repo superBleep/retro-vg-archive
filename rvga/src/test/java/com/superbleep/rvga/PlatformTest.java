@@ -1,10 +1,9 @@
 package com.superbleep.rvga;
 
-import com.superbleep.rvga.exception.ArchiveUserNotFound;
 import com.superbleep.rvga.exception.PlatformEmptyBody;
 import com.superbleep.rvga.exception.PlatformNotFound;
 import com.superbleep.rvga.model.Platform;
-import com.superbleep.rvga.model.PlatformUpdate;
+import com.superbleep.rvga.dto.PlatformPatch;
 import com.superbleep.rvga.repository.PlatformRepository;
 import com.superbleep.rvga.service.PlatformService;
 import org.junit.jupiter.api.Test;
@@ -35,17 +34,8 @@ public class PlatformTest {
     @Test
     void whenBodyIsValid_create_savesPlatform() {
         // Arrange
-        Platform platform = new Platform(
-                "test",
-                "testManufacturer",
-                new Date()
-        );
-        Platform savedPlatform = new Platform(
-                1,
-                "test",
-                "testManufacturer",
-                new Date()
-        );
+        Platform platform = new Platform("test", "testManufacturer", new Date());
+        Platform savedPlatform = new Platform(1, "test", "testManufacturer", new Date());
 
         when(platformRepository.save(platform)).thenReturn(savedPlatform);
 
@@ -61,17 +51,16 @@ public class PlatformTest {
     @Test
     void whenBodyIsValid_create_throwsDataIntegrityViolation() {
         // Arrange
-        Platform platform = new Platform(
-                "test",
-                "testManufacturer",
-                new Date()
-        );
-        String sqlErrorMsg = "ERROR: duplicate key value violates unique constraint \"platform_name_key\"\n  Detail: Key (name)=(test) already exists.";
+        Platform platform = new Platform("test", "testManufacturer", new Date());
+        String sqlErrorMsg = "ERROR: duplicate key value violates unique constraint \"platform_name_key\"\n" +
+                "  Detail: Key (name)=(test) already exists.";
 
-        when(platformRepository.save(platform)).thenThrow(new DataIntegrityViolationException("", new Throwable(sqlErrorMsg)));
+        when(platformRepository.save(platform)).thenThrow(new DataIntegrityViolationException("",
+                new Throwable(sqlErrorMsg)));
 
         // Act / Assert
-        Exception exception = assertThrows(DataIntegrityViolationException.class, () -> platformService.create(platform));
+        Exception exception = assertThrows(DataIntegrityViolationException.class,
+                () -> platformService.create(platform));
         assertEquals(exception.getCause().getMessage(), sqlErrorMsg);
 
         verify(platformRepository).save(platform);
@@ -80,18 +69,8 @@ public class PlatformTest {
     @Test
     void getAll_returnsAllPlatforms() {
         // Arrange
-        Platform platform1 = new Platform(
-                1,
-                "test1",
-                "testManufacturer1",
-                new Date()
-        );
-        Platform platform2 = new Platform(
-                2,
-                "test1",
-                "testManufacturer1",
-                new Date()
-        );
+        Platform platform1 = new Platform(1, "test1", "testManufacturer1", new Date());
+        Platform platform2 = new Platform(2, "test1", "testManufacturer1", new Date());
 
         when(platformRepository.findAll()).thenReturn(List.of(platform1, platform2));
 
@@ -107,12 +86,7 @@ public class PlatformTest {
     @Test
     void whenPlatformFound_getById_returnsPlatform() {
         // Arrange
-        Platform platform = new Platform(
-                1,
-                "test1",
-                "testManufacturer1",
-                new Date()
-        );
+        Platform platform = new Platform(1, "test1", "testManufacturer1", new Date());
         Optional<Platform> platformOptional = Optional.of(platform);
 
         when(platformRepository.findById(1L)).thenReturn(platformOptional);
@@ -144,17 +118,8 @@ public class PlatformTest {
     void whenBodyIsValid_modifyData_modifiesData() {
         // Arrange
         long id = 1;
-        Platform oldPlatform = new Platform(
-                id,
-                "test",
-                "testManufacturer",
-                new Date()
-        );
-        PlatformUpdate newPlatform = new PlatformUpdate(
-                "test1",
-                "testManufacturer1",
-                new Date()
-        );
+        Platform oldPlatform = new Platform(id, "test", "testManufacturer", new Date());
+        PlatformPatch newPlatform = new PlatformPatch("test1", "testManufacturer1", new Date());
         Optional<Platform> oldPlatformOptional = Optional.of(oldPlatform);
 
         when(platformRepository.findById(id)).thenReturn(oldPlatformOptional);
@@ -164,23 +129,15 @@ public class PlatformTest {
 
         // Assert
         verify(platformRepository).findById(id);
-        verify(platformRepository).modifyData(
-                newPlatform.getName(),
-                newPlatform.getManufacturer(),
-                newPlatform.getRelease(),
-                id
-        );
+        verify(platformRepository).modifyData(newPlatform.getName(), newPlatform.getManufacturer(),
+                newPlatform.getRelease(), id);
     }
 
     @Test
     void whenPlatformNotFound_modifyData_throwsPlatformNotFound() {
         // Arrange
         long id = 1;
-        PlatformUpdate newPlatform = new PlatformUpdate(
-                "test1",
-                "testManufacturer1",
-                new Date()
-        );
+        PlatformPatch newPlatform = new PlatformPatch("test1", "testManufacturer1", new Date());
         Optional<Platform> oldPlatformOptional = Optional.empty();
         String errorMsg = "Platform with id 1 doesn't exist in the database";
 
@@ -196,13 +153,8 @@ public class PlatformTest {
     void whenBodyIsAllNull_modifyData_throwsPlatformEmptyBody() {
         // Arrange
         long id = 1;
-        Platform oldPlatform = new Platform(
-                id,
-                "test",
-                "testManufacturer",
-                new Date()
-        );
-        PlatformUpdate newPlatform = new PlatformUpdate(null, null, null);
+        Platform oldPlatform = new Platform(id, "test", "testManufacturer", new Date());
+        PlatformPatch newPlatform = new PlatformPatch(null, null, null);
         Optional<Platform> oldPlatformOptional = Optional.of(oldPlatform);
         String errorMsg = "Request must modify at least one field";
 
@@ -218,17 +170,8 @@ public class PlatformTest {
     void whenNameIsNull_modifyData_modifiesData() {
         // Arrange
         long id = 1;
-        Platform oldPlatform = new Platform(
-                id,
-                "test",
-                "testManufacturer",
-                new Date()
-        );
-        PlatformUpdate newPlatform = new PlatformUpdate(
-                null,
-                "testManufacturer1",
-                new Date()
-        );
+        Platform oldPlatform = new Platform(id, "test", "testManufacturer", new Date());
+        PlatformPatch newPlatform = new PlatformPatch(null, "testManufacturer1", new Date());
         Optional<Platform> oldPlatformOptional = Optional.of(oldPlatform);
 
         when(platformRepository.findById(id)).thenReturn(oldPlatformOptional);
@@ -238,29 +181,16 @@ public class PlatformTest {
 
         // Assert
         verify(platformRepository).findById(id);
-        verify(platformRepository).modifyData(
-                newPlatform.getName(),
-                newPlatform.getManufacturer(),
-                newPlatform.getRelease(),
-                id
-        );
+        verify(platformRepository).modifyData(newPlatform.getName(), newPlatform.getManufacturer(),
+                newPlatform.getRelease(), id);
     }
 
     @Test
-    void whenManufacturerIsNull_modifyData_modifiesData() {
+    void whenAllButNameIsNull_modifyData_modifiesData() {
         // Arrange
         long id = 1;
-        Platform oldPlatform = new Platform(
-                id,
-                "test",
-                "testManufacturer",
-                new Date()
-        );
-        PlatformUpdate newPlatform = new PlatformUpdate(
-                "test",
-                null,
-                new Date()
-        );
+        Platform oldPlatform = new Platform(id, "test", "testManufacturer", new Date());
+        PlatformPatch newPlatform = new PlatformPatch("test1", null, null);
         Optional<Platform> oldPlatformOptional = Optional.of(oldPlatform);
 
         when(platformRepository.findById(id)).thenReturn(oldPlatformOptional);
@@ -270,56 +200,15 @@ public class PlatformTest {
 
         // Assert
         verify(platformRepository).findById(id);
-        verify(platformRepository).modifyData(
-                newPlatform.getName(),
-                newPlatform.getManufacturer(),
-                newPlatform.getRelease(),
-                id
-        );
-    }
-
-    @Test
-    void whenReleaseIsNull_modifyData_modifiesData() {
-        // Arrange
-        long id = 1;
-        Platform oldPlatform = new Platform(
-                id,
-                "test",
-                "testManufacturer",
-                new Date()
-        );
-        PlatformUpdate newPlatform = new PlatformUpdate(
-                "test",
-                "testManufacturer",
-                null
-        );
-        Optional<Platform> oldPlatformOptional = Optional.of(oldPlatform);
-
-        when(platformRepository.findById(id)).thenReturn(oldPlatformOptional);
-
-        // Act
-        platformService.modifyData(newPlatform, id);
-
-        // Assert
-        verify(platformRepository).findById(id);
-        verify(platformRepository).modifyData(
-                newPlatform.getName(),
-                newPlatform.getManufacturer(),
-                newPlatform.getRelease(),
-                id
-        );
+        verify(platformRepository).modifyData(newPlatform.getName(), newPlatform.getManufacturer(),
+                newPlatform.getRelease(), id);
     }
 
     @Test
     void whenPlatformIsFound_delete_removesPlatform() {
         // Arrange
         long id = 1;
-        Platform oldPlatform = new Platform(
-                id,
-                "test",
-                "testManufacturer",
-                new Date()
-        );
+        Platform oldPlatform = new Platform(id, "test", "testManufacturer", new Date());
         Optional<Platform> oldPlatformOptional = Optional.of(oldPlatform);
 
         when(platformRepository.findById(id)).thenReturn(oldPlatformOptional);
