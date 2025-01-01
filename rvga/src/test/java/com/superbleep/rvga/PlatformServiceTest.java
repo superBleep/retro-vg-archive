@@ -1,9 +1,10 @@
 package com.superbleep.rvga;
 
+import com.superbleep.rvga.dto.GameGet;
+import com.superbleep.rvga.dto.PlatformPatch;
 import com.superbleep.rvga.exception.PlatformEmptyBody;
 import com.superbleep.rvga.exception.PlatformNotFound;
 import com.superbleep.rvga.model.Platform;
-import com.superbleep.rvga.dto.PlatformPatch;
 import com.superbleep.rvga.repository.PlatformRepository;
 import com.superbleep.rvga.service.PlatformService;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class PlatformTest {
+public class PlatformServiceTest {
     @InjectMocks
     private PlatformService platformService;
 
@@ -105,6 +106,40 @@ public class PlatformTest {
         // Arrange
         String errorMsg = "Platform with id 1 doesn't exist in the database";
         Optional<Platform> platformOptional = Optional.empty();
+
+        when(platformRepository.findById(1L)).thenReturn(platformOptional);
+
+        // Act / Assert
+        Exception exception = assertThrows(PlatformNotFound.class, () -> platformService.getById(1));
+        assertEquals(exception.getMessage(), errorMsg);
+        verify(platformRepository).findById(1L);
+    }
+
+    @Test
+    void getGames_returnsGameList() {
+        // Arrange
+        Platform platform = new Platform(1, "testName", "testManufacturer", new Date());
+        GameGet persistedGame1 = new GameGet(1, "testTitle1", "testDeveloper1", "testPublisher1", "testGenre1");
+        GameGet persistedGame2 = new GameGet(2, "testTitle2", "testDeveloper2", "testPublisher2", "testGenre2");
+        Optional<Platform> platformOptional = Optional.of(platform);
+
+        when(platformRepository.findById(1L)).thenReturn(platformOptional);
+        when(platformRepository.findAllGames(1)).thenReturn(List.of(persistedGame1, persistedGame2));
+
+        // Act
+        List<GameGet> res = platformService.getGames(1);
+
+        // Assert
+        assertThat(res).hasSize(2);
+        verify(platformRepository).findById(1L);
+        verify(platformRepository).findAllGames(1L);
+    }
+
+    @Test
+    void whenPlatformNotFound_getGames_returnsPlatformNotFound() {
+        // Arrange
+        Optional<Platform> platformOptional = Optional.empty();
+        String errorMsg = "Platform with id 1 doesn't exist in the database";
 
         when(platformRepository.findById(1L)).thenReturn(platformOptional);
 

@@ -1,7 +1,8 @@
 package com.superbleep.rvga.controller;
 
-import com.superbleep.rvga.model.Platform;
+import com.superbleep.rvga.dto.GameGet;
 import com.superbleep.rvga.dto.PlatformPatch;
+import com.superbleep.rvga.model.Platform;
 import com.superbleep.rvga.service.PlatformService;
 import com.superbleep.rvga.util.InvalidFieldsResponse;
 import com.superbleep.rvga.util.MessageResponse;
@@ -59,6 +60,17 @@ public class PlatfromController {
     @GetMapping("/{id}")
     public Platform getById(@PathVariable Long id) {
         return platformService.getById(id);
+    }
+
+    @Operation(summary = "Get games by id", description = "Get all the games released on a specific platform")
+    @Parameter(name = "id", description = "Platform's id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Games returned successfully"),
+            @ApiResponse(responseCode = "404", description = "Platform not found")
+    })
+    @GetMapping("/{id}/games")
+    public List<GameGet> getGames(@PathVariable Long id) {
+        return platformService.getGames(id);
     }
 
     @Operation(summary = "Modify platform data", description = "Modify a platform's data. If some of the fields " +

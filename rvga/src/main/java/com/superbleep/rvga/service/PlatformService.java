@@ -1,9 +1,10 @@
 package com.superbleep.rvga.service;
 
+import com.superbleep.rvga.dto.GameGet;
+import com.superbleep.rvga.dto.PlatformPatch;
 import com.superbleep.rvga.exception.PlatformEmptyBody;
 import com.superbleep.rvga.exception.PlatformNotFound;
 import com.superbleep.rvga.model.Platform;
-import com.superbleep.rvga.dto.PlatformPatch;
 import com.superbleep.rvga.repository.PlatformRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,12 @@ public class PlatformService {
             return platformOptional.get();
         else
             throw new PlatformNotFound(id);
+    }
+
+    public List<GameGet> getGames(long id) {
+        this.getById(id);
+
+        return platformRepository.findAllGames(id);
     }
 
     @Transactional
