@@ -7,6 +7,7 @@ import com.superbleep.rvga.model.Game;
 import com.superbleep.rvga.model.Platform;
 import com.superbleep.rvga.repository.GameRepository;
 import com.superbleep.rvga.service.GameService;
+import com.superbleep.rvga.service.GameVersionService;
 import com.superbleep.rvga.service.PlatformService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,8 @@ public class GameServiceTest {
     private GameRepository gameRepository;
     @Mock
     private PlatformService platformService;
+    @Mock
+    private GameVersionService gameVersionService;
 
     @Test
     void whenBodyIsValid_create_savesGame() {
@@ -45,7 +48,7 @@ public class GameServiceTest {
         Platform platform1 = new Platform(1, "testName1", "testManufacturer1", new Date());
         Platform platform2 = new Platform(2, "testName2", "testManufacturer2", new Date());
         GamePost gamePost = new GamePost("testTitle", "testDeveloper", "testPublisher",
-                1, "testGenre");
+                1, "testGenre", "1.0.0", new Date(), "Notes");
         Game persistedGame = new Game(1, "testTitle", "testDeveloper7", "testPublisher7",
                 platform2, "testGenre7");
         Game savedGame = new Game(1, "testTitle", "testDeveloper", "testPublisher",
@@ -70,7 +73,7 @@ public class GameServiceTest {
     void whenPlatformNotFound_create_throwsPlatformNotFound() {
         // Arrange
         GamePost gamePost = new GamePost("testTitle", "testDeveloper", "testPublisher",
-                1L, "testGenre");
+                1L, "testGenre", "1.0.0", new Date(), "Notes");
         String errorMsg = "Platform with id 1 doesn't exist in the database";
 
         when(platformService.getById(gamePost.platformId())).thenThrow(new PlatformNotFound(1));
@@ -87,7 +90,7 @@ public class GameServiceTest {
         // Arrange
         Platform platform = new Platform(1, "testName1", "testManufacturer1", new Date());
         GamePost gamePost = new GamePost("testTitle", "testDeveloper", "testPublisher",
-                1L, "testGenre");
+                1L, "testGenre", "1.0.0", new Date(), "Notes");
         Game persistedGame = new Game(1, "testTitle", "testDeveloper7", "testPublisher7",
                 platform, "testGenre7");
         String errorMsg = "There's already a game with the same title, released on the same platform.";

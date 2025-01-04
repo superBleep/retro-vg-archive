@@ -34,13 +34,13 @@ CREATE TABLE rvga.game (
 	title VARCHAR(100) NOT NULL,
 	developer VARCHAR(70) NOT NULL,
 	publisher VARCHAR(70) NOT NULL,
-	platform_id BIGINT REFERENCES rvga.platform(id) NOT NULL,
+	platform_id BIGINT REFERENCES rvga.platform(id) ON DELETE CASCADE NOT NULL,
 	genre VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE rvga.game_version (
 	id VARCHAR(30),
-	game_id BIGINT REFERENCES rvga.game(id),
+	game_id BIGINT REFERENCES rvga.game(id) ON DELETE CASCADE,
 	release DATE NOT NULL,
 	notes TEXT NOT NULL,
 	PRIMARY KEY (id, game_id)
@@ -55,19 +55,19 @@ CREATE TABLE rvga.emulator (
 );
 
 CREATE TABLE rvga.emulator_platform (
-	emulator_id BIGINT REFERENCES rvga.emulator(id),
-	platform_id BIGINT REFERENCES rvga.platform(id),
+	emulator_id BIGINT REFERENCES rvga.emulator(id) ON DELETE CASCADE,
+	platform_id BIGINT REFERENCES rvga.platform(id) ON DELETE CASCADE,
 	PRIMARY KEY (emulator_id, platform_id)
 );
 
 CREATE TABLE rvga.review (
 	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	user_id BIGINT REFERENCES rvga.archive_user(id) NOT NULL,
+	user_id BIGINT REFERENCES rvga.archive_user(id) ON DELETE CASCADE NOT NULL,
 	version_id VARCHAR(30) NOT NULL,
 	game_id BIGINT NOT NULL,
 	creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	emulator_id BIGINT REFERENCES rvga.emulator(id),
+	emulator_id BIGINT REFERENCES rvga.emulator(id) ON DELETE CASCADE,
 	rating SMALLINT NOT NULL,
 	comment TEXT,
-	FOREIGN KEY (version_id, game_id) REFERENCES rvga.game_version (id, game_id)
+	FOREIGN KEY (version_id, game_id) REFERENCES rvga.game_version (id, game_id) ON DELETE CASCADE
 );

@@ -2,13 +2,16 @@ package com.superbleep.rvga.service;
 
 import com.superbleep.rvga.dto.GamePatch;
 import com.superbleep.rvga.dto.GamePost;
+import com.superbleep.rvga.dto.GameVersionPost;
 import com.superbleep.rvga.exception.GameEmptyBody;
 import com.superbleep.rvga.exception.GameIdenticalFound;
 import com.superbleep.rvga.exception.GameNotFound;
 import com.superbleep.rvga.model.Game;
+import com.superbleep.rvga.model.GameVersion;
 import com.superbleep.rvga.model.Platform;
 import com.superbleep.rvga.repository.GameRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,10 +21,13 @@ import java.util.Optional;
 public class GameService {
     private final GameRepository gameRepository;
     private final PlatformService platformService;
+    private final GameVersionService gameVersionService;
 
-    public GameService(GameRepository gameRepository, PlatformService platformService) {
+    public GameService(GameRepository gameRepository, PlatformService platformService,
+                       @Lazy GameVersionService gameVersionService) {
         this.gameRepository = gameRepository;
         this.platformService = platformService;
+        this.gameVersionService = gameVersionService;
     }
 
     @Transactional
@@ -35,8 +41,13 @@ public class GameService {
                 throw new GameIdenticalFound();
 
         Game newGame = new Game(gamePost, platform);
+        GameVersionPost gameVersionPost = new GameVersionPost(gamePost.initVerId(), newGame.getId(),
+                gamePost.initVerRelease(), gamePost.initVerNotes());
 
-        return gameRepository.save(newGame);
+        Game savedGame = gameRepository.save(newGame);
+        gameVersionService.create(gameVersionPost, newGame);
+
+        return savedGame;
     }
 
     public List<Game> getAll() {

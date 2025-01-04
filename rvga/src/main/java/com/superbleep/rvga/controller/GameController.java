@@ -30,7 +30,8 @@ public class GameController {
         this.gameService = gameService;
     }
 
-    @Operation(summary = "Register a new game", description = "Register a new game, sent in the request body")
+    @Operation(summary = "Register a new game", description = "Register a new game, sent in the request body." +
+            "The new game must also include an initial version")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Game created successfully"),
             @ApiResponse(responseCode = "400", description = "Required fields are missing from the request " +
