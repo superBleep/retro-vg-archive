@@ -5,6 +5,7 @@ import com.superbleep.rvga.exception.general.BadRequestException;
 import com.superbleep.rvga.exception.general.ForbiddenException;
 import com.superbleep.rvga.exception.general.NotFoundException;
 import com.superbleep.rvga.util.InvalidFieldsResponse;
+import com.superbleep.rvga.util.InvalidValuesResponse;
 import com.superbleep.rvga.util.MessageResponse;
 import com.superbleep.rvga.util.SqlResponse;
 import org.springframework.beans.TypeMismatchException;
@@ -12,6 +13,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -26,7 +28,7 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GeneralExceptionHandler {
-    @ExceptionHandler({ArchiveUserNotFound.class, PlatformNotFound.class, GameNotFound.class})
+    @ExceptionHandler({ArchiveUserNotFound.class, PlatformNotFound.class, GameNotFound.class, GameVersionNotFound.class})
     public ResponseEntity<Object> handle(NotFoundException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 
@@ -70,9 +72,18 @@ public class GeneralExceptionHandler {
                 .body(res);
     }
 
-    @ExceptionHandler({HttpMessageNotReadableException.class, ArchiveUserPasswordsIdentical.class,
+    @ExceptionHandler({HttpMessageNotReadableException.class})
+    public ResponseEntity<Object> hanlde(HttpMessageNotReadableException e) {
+        InvalidValuesResponse res = new InvalidValuesResponse("Malformed JSON body", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(res);
+    }
+
+    @ExceptionHandler({ArchiveUserPasswordsIdentical.class,
             ArchiveUserEmptyBody.class, ArchiveUserRolesIdentical.class, ArchiveUserRoleNotFound.class,
-            PlatformEmptyBody.class})
+            PlatformEmptyBody.class, GameVersionEmptyBody.class, GameVersionOnlyOne.class})
     public ResponseEntity<Object> handle(BadRequestException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 

@@ -1,6 +1,8 @@
 package com.superbleep.rvga.repository;
 
+import com.superbleep.rvga.dto.GameVersionGet;
 import com.superbleep.rvga.model.Game;
+import com.superbleep.rvga.model.GameVersion;
 import com.superbleep.rvga.model.Platform;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,6 +26,12 @@ public interface GameRepository extends JpaRepository<Game, Long> {
         WHERE g.id = ?1
     """)
     Optional<Game> findByIdWithPlatform(long id);
+    @Query("""
+        SELECT new com.superbleep.rvga.dto.GameVersionGet(gv.id.id, gv.game, gv.release, gv.notes)
+        FROM GameVersion gv
+        WHERE gv.id.gameId = ?1
+    """)
+    List<GameVersionGet> findAllGameVersions(long id);
 
     @Modifying
     @Query("""

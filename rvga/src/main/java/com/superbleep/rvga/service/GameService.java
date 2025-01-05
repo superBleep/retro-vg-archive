@@ -2,6 +2,7 @@ package com.superbleep.rvga.service;
 
 import com.superbleep.rvga.dto.GamePatch;
 import com.superbleep.rvga.dto.GamePost;
+import com.superbleep.rvga.dto.GameVersionGet;
 import com.superbleep.rvga.dto.GameVersionPost;
 import com.superbleep.rvga.exception.GameEmptyBody;
 import com.superbleep.rvga.exception.GameIdenticalFound;
@@ -70,6 +71,12 @@ public class GameService {
             return gameOptional.get();
         else
             throw new GameNotFound(id);
+    }
+
+    public List<GameVersionGet> getGameVersions(long id) {
+        this.getById(id);
+
+        return gameRepository.findAllGameVersions(id);
     }
 
     @Transactional

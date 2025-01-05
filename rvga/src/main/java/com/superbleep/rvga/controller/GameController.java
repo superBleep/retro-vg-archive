@@ -2,6 +2,7 @@ package com.superbleep.rvga.controller;
 
 import com.superbleep.rvga.dto.GamePatch;
 import com.superbleep.rvga.dto.GamePost;
+import com.superbleep.rvga.dto.GameVersionGet;
 import com.superbleep.rvga.model.Game;
 import com.superbleep.rvga.service.GameService;
 import com.superbleep.rvga.util.InvalidFieldsResponse;
@@ -71,6 +72,17 @@ public class GameController {
             return gameService.getByIdFull(id);
         else
             return gameService.getById(id);
+    }
+
+    @Operation(summary = "Get game versions by id", description = "Get all the versions associated with a video game")
+    @Parameter(name = "id", description = "Game's id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Game versions returned successfully"),
+            @ApiResponse(responseCode = "404", description = "Game not found")
+    })
+    @GetMapping("/{id}/game_versions")
+    public List<GameVersionGet> getGameVersions(@PathVariable Long id) {
+        return gameService.getGameVersions(id);
     }
 
     @Operation(summary = "Modify game data", description = "Modify a game's data. If some of the fields are null," +

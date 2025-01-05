@@ -1,13 +1,17 @@
 package com.superbleep.rvga.model;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 public class GameVersionId implements Serializable {
+    @NotBlank
     private String id;
+    @NotNull
     private long gameId;
 
     public GameVersionId() {

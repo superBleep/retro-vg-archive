@@ -2,6 +2,7 @@ package com.superbleep.rvga;
 
 import com.superbleep.rvga.dto.GamePatch;
 import com.superbleep.rvga.dto.GamePost;
+import com.superbleep.rvga.dto.GameVersionGet;
 import com.superbleep.rvga.exception.*;
 import com.superbleep.rvga.model.Game;
 import com.superbleep.rvga.model.Platform;
@@ -192,6 +193,43 @@ public class GameServiceTest {
     }
 
     @Test
+    void whenGameFound_getGameVersions_returnsGameVersions() {
+        // Arrange
+        long id = 1;
+        Platform platform = new Platform(1, "testName", "testManufacturer", new Date());
+        Game game = new Game(1, "testTitle", "testDeveloper", "testPublisher",
+                platform, "testGenre");
+        GameVersionGet gameVersionGet = new GameVersionGet("1.0.0", game, new Date(), "notes");
+
+        when(gameRepository.findById(id)).thenReturn(Optional.of(game));
+        when(gameRepository.findAllGameVersions(id)).thenReturn(List.of(gameVersionGet));
+
+        // Act
+        List<GameVersionGet> res = gameService.getGameVersions(id);
+
+        // Assert
+        assertThat(res).isEqualTo(List.of(gameVersionGet));
+
+        verify(gameRepository).findById(id);;
+        verify(gameRepository).findAllGameVersions(id);
+    }
+
+    @Test
+    void whenGameNotFound_getGameVersions_throwsGameNotFound() {
+        // Arrange
+        long id = 1;
+        String errorMsg = "Game with id 1 doesn't exist in the database";
+
+        when(gameRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act / Assert
+        Exception exception = assertThrows(GameNotFound.class, () -> gameService.getGameVersions(id));
+        assertEquals(exception.getMessage(), errorMsg);
+
+        verify(gameRepository).findById(id);
+    }
+
+    @Test
     void whenBodyIsValid_modifyData_modifiesData() {
         // Arrange
         Platform platform1 = new Platform(1, "testName", "testManufacturer", new Date());
@@ -340,7 +378,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void whenGameIsNotFound_delete_throwsPlatformNotFound() {
+    void whenGameIsNotFound_delete_throwsGameNotFound() {
         // Arrange
         long gameId = 1;
         Optional<Game> oldGameOptional = Optional.empty();

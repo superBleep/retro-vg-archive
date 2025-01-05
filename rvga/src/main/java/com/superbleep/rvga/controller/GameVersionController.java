@@ -1,12 +1,17 @@
 package com.superbleep.rvga.controller;
 
 import com.superbleep.rvga.dto.GameVersionGet;
+import com.superbleep.rvga.dto.GameVersionPatch;
 import com.superbleep.rvga.dto.GameVersionPost;
 import com.superbleep.rvga.model.GameVersion;
+import com.superbleep.rvga.model.GameVersionId;
 import com.superbleep.rvga.service.GameVersionService;
 import com.superbleep.rvga.util.InvalidFieldsResponse;
+import com.superbleep.rvga.util.MessageResponse;
 import com.superbleep.rvga.util.SqlResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -53,5 +58,51 @@ public class GameVersionController {
     @GetMapping
     public List<GameVersionGet> getAll() {
         return gameVersionService.getAll();
+    }
+
+    @Operation(summary = "Get game version by id", description = "Return a specific game version from the database " +
+            "by its id (both the version id string and the id of the associated game)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Game version returned successfully"),
+            @ApiResponse(responseCode = "404", description = "Game version not found",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class)))})
+    @GetMapping("/single")
+    public GameVersionGet getById(@Valid @RequestBody GameVersionId id) {
+        return gameVersionService.getById(id);
+    }
+
+    @Operation(summary = "Modify game version data", description = "Modify data for a game version. If some of " +
+            "the fields are null, they will be replaced with their old values")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Game version's data modified successfully",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Game version not found",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Malformed request body / All the fields are null",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class)))})
+    @PatchMapping(produces = "application/json")
+    public ResponseEntity<Object> modifyData(@Valid @RequestBody GameVersionPatch newGameVersion) {
+        gameVersionService.modifyData(newGameVersion);
+
+        MessageResponse res = new MessageResponse(STR."Modified data for game version \{newGameVersion.getId()}, " +
+                STR."game id \{newGameVersion.getGameId()}");
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "Delete a game version", description = "Remove a game version from the database by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Game version deleted successfully",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Game version not found",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Game version is the only one for its video game",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class)))})
+    @DeleteMapping(produces = "application/json")
+    public ResponseEntity<Object> delete(@RequestBody GameVersionId id) {
+        gameVersionService.delete(id);
+
+        MessageResponse res = new MessageResponse(STR."Deleted game version with id \{id.getId()}, " +
+                STR."game id \{id.getGameId()}");
+        return ResponseEntity.ok(res);
     }
 }
