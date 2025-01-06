@@ -87,7 +87,7 @@ public class EmulatorController {
     }
 
     @Operation(summary = "Modify emulator platform(s)", description = "Modify an emulator platform(s). The list" +
-            "supplied in the body will replace the current platform mapping for the selected emulator")
+            " supplied in the body will replace the current platform mapping for the selected emulator")
     @Parameters(value = {
             @Parameter(name = "id", description = "Emulator's id"),
             @Parameter(name = "platformIds", description = "List of platform ids")
