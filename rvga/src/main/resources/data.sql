@@ -39,12 +39,12 @@ VALUES
 ('1.0', 9, '1980-06-01', 'Initial release'),
 ('1.0', 10, '1982-10-22', 'Initial release');
 
-INSERT INTO rvga.emulator (name, developer, release, version) 
+INSERT INTO rvga.emulator (name, developer, release) 
 VALUES
-('PCSX2', 'PCSX2 Team', '2002-03-23', '1.7.0'),
-('RetroArch', 'Libretro', '2010-10-14', '1.9.0'),
-('Dolphin', 'Dolphin Team', '2003-09-22', '5.0-17527'),
-('xemu', 'xemu Team', '2017-12-19', '0.5.0');
+('PCSX2', 'PCSX2 Team', '2002-03-23'),
+('RetroArch', 'Libretro', '2010-10-14'),
+('Dolphin', 'Dolphin Team', '2003-09-22'),
+('xemu', 'xemu Team', '2017-12-19');
 
 INSERT INTO rvga.emulator_platform (emulator_id, platform_id) 
 VALUES

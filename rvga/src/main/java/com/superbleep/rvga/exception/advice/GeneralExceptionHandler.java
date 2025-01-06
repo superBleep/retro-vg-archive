@@ -83,7 +83,8 @@ public class GeneralExceptionHandler {
 
     @ExceptionHandler({ArchiveUserPasswordsIdentical.class,
             ArchiveUserEmptyBody.class, ArchiveUserRolesIdentical.class, ArchiveUserRoleNotFound.class,
-            PlatformEmptyBody.class, GameVersionEmptyBody.class, GameVersionOnlyOne.class})
+            PlatformEmptyBody.class, GameVersionEmptyBody.class, GameVersionOnlyOne.class, EmulatorNotFound.class,
+            EmulatorEmptyBody.class, EmulatorEmptyPlatformList.class})
     public ResponseEntity<Object> handle(BadRequestException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 

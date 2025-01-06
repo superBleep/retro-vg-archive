@@ -50,8 +50,7 @@ CREATE TABLE rvga.emulator (
 	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	name VARCHAR(70) UNIQUE NOT NULL,
 	developer VARCHAR(70) NOT NULL,
-	release DATE NOT NULL,
-	version VARCHAR(30) NOT NULL
+	release DATE NOT NULL
 );
 
 CREATE TABLE rvga.emulator_platform (
