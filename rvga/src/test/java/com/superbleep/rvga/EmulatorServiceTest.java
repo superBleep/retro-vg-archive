@@ -30,6 +30,7 @@ import java.util.Optional;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,10 +85,11 @@ public class EmulatorServiceTest {
 
         verify(emulatorRepository).save(any());
         verify(platformService).getById(id);
+        verify(emulatorPlatformService).create(any());
     }
 
     @Test
-    public void whenPlatformIsNotFound_create_returnsPlatformNotFound() {
+    public void whenPlatformIsNotFound_create_throwsPlatformNotFound() {
         // Arrange
         when(emulatorRepository.save(any())).thenReturn(emulator);
         when(platformService.getById(emulatorPost.platformIds().getFirst()))
@@ -114,7 +116,7 @@ public class EmulatorServiceTest {
         assertThat(res).usingRecursiveComparison().isEqualTo(List.of(emulatorGet));
 
         verify(emulatorRepository).findAll();
-        verify(emulatorRepository).findAllPlatformIds(1L);
+        verify(emulatorRepository).findAllPlatformIds(id);
     }
 
     @Test
@@ -145,7 +147,7 @@ public class EmulatorServiceTest {
     }
 
     @Test
-    public void whenEmulatorFound_modifyData_modifiesData() {
+    public void whenEmulatorIsFound_modifyData_modifiesData() {
         // Arrange
         when(emulatorRepository.findById(id)).thenReturn(Optional.of(emulator));
 
@@ -154,6 +156,7 @@ public class EmulatorServiceTest {
 
         // Assert
         verify(emulatorRepository).findById(id);
+        verify(emulatorRepository).modifyData(any(), any(), any(), eq(id));
     }
 
     @Test
@@ -187,6 +190,7 @@ public class EmulatorServiceTest {
         emulatorService.modifyData(emulatorPatches.get("NAME_NULL"), id);
 
         verify(emulatorRepository).findById(id);
+        verify(emulatorRepository).modifyData(any(), any(), any(), eq(id));
     }
 
     @Test
@@ -198,6 +202,7 @@ public class EmulatorServiceTest {
         emulatorService.modifyData(emulatorPatches.get("REST_NULL"), id);
 
         verify(emulatorRepository).findById(id);
+        verify(emulatorRepository).modifyData(any(), any(), any(), eq(id));
     }
 
     @Test
@@ -211,6 +216,7 @@ public class EmulatorServiceTest {
 
         verify(emulatorRepository).findById(id);
         verify(platformService).getById(id);
+        verify(emulatorPlatformService).create(any());
     }
 
     @Test
@@ -228,6 +234,7 @@ public class EmulatorServiceTest {
         emulatorService.delete(id);
 
         verify(emulatorRepository).findById(id);
+        verify(emulatorRepository).deleteById(id);
     }
 
     @Test

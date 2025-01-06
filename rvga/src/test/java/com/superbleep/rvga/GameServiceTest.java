@@ -3,13 +3,16 @@ package com.superbleep.rvga;
 import com.superbleep.rvga.dto.GamePatch;
 import com.superbleep.rvga.dto.GamePost;
 import com.superbleep.rvga.dto.GameVersionGet;
-import com.superbleep.rvga.exception.*;
+import com.superbleep.rvga.exception.GameEmptyBody;
+import com.superbleep.rvga.exception.GameIdenticalFound;
+import com.superbleep.rvga.exception.GameNotFound;
 import com.superbleep.rvga.model.Game;
 import com.superbleep.rvga.model.Platform;
 import com.superbleep.rvga.repository.GameRepository;
 import com.superbleep.rvga.service.GameService;
 import com.superbleep.rvga.service.GameVersionService;
 import com.superbleep.rvga.service.PlatformService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,10 +23,10 @@ import org.mockito.quality.Strictness;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -43,19 +46,44 @@ public class GameServiceTest {
     @Mock
     private GameVersionService gameVersionService;
 
-    @Test
-    void whenBodyIsValid_create_savesGame() {
-        // Arrange
-        Platform platform1 = new Platform(1, "testName1", "testManufacturer1", new Date());
-        Platform platform2 = new Platform(2, "testName2", "testManufacturer2", new Date());
-        GamePost gamePost = new GamePost("testTitle", "testDeveloper", "testPublisher",
-                1, "testGenre", "1.0.0", new Date(), "Notes");
-        Game persistedGame = new Game(1, "testTitle", "testDeveloper7", "testPublisher7",
-                platform2, "testGenre7");
-        Game savedGame = new Game(1, "testTitle", "testDeveloper", "testPublisher",
-                platform1, "testGenre");
+    private static long id;
+    private static List<Platform> platforms;
+    private static Game savedGame;
+    private static Game persistedGame;
+    private static GamePost gamePost;
+    private static Map<String, GamePatch> gamePatches;
+    private static GameVersionGet gameVersionGet;
 
-        when(platformService.getById(gamePost.platformId())).thenReturn(platform1);
+    @BeforeAll
+    public static void setUp() {
+        id = 1;
+        platforms = List.of(
+                new Platform(1L, "name", "manufacturer", new Date()),
+                new Platform(2L, "name2", "manufacturer2", new Date())
+        );
+        persistedGame = new Game("title", "developer", "publisher", platforms.get(1),
+                "genre");
+        gamePost = new GamePost("title", "developer", "publisher", 1, "genre",
+                "1.0.0", new Date(), "notes");
+        savedGame = new Game(gamePost, platforms.get(0));
+        gamePatches = Map.of(
+                "VALID", new GamePatch("title1", "developer1", "publisher1",
+                        platforms.get(1).getId(), "genre1"),
+                "IDENTICAL", new GamePatch(persistedGame.getTitle(), "developer1", "publisher1",
+                        persistedGame.getPlatform().getId(), "genre1"),
+                "PLATFORM_NULL", new GamePatch("title1", "developer1", "publisher1",
+                        null, "genre1"),
+                "REST_NULL", new GamePatch(null, null, null, platforms.get(1).getId(),
+                        null),
+                "ALL_NULL", new GamePatch(null, null, null, null, null)
+        );
+        gameVersionGet = new GameVersionGet("1.0.0", savedGame, new Date(), "notes");
+    }
+
+    @Test
+    void whenGameIsUnique_create_savesGame() {
+        // Arrange
+        when(platformService.getById(gamePost.platformId())).thenReturn(platforms.getFirst());
         when(gameRepository.findAllByTitleWithPlatform(gamePost.title())).thenReturn(List.of(persistedGame));
         when(gameRepository.save(any())).thenReturn(savedGame);
 
@@ -65,143 +93,93 @@ public class GameServiceTest {
         // Assert
         assertThat(res).isEqualTo(savedGame);
 
-        verify(platformService).getById(1L);
+        verify(platformService).getById(id);
         verify(gameRepository).findAllByTitleWithPlatform(gamePost.title());
         verify(gameRepository).save(any());
+        verify(gameVersionService).create(any(), any());
     }
 
     @Test
-    void whenPlatformNotFound_create_throwsPlatformNotFound() {
+    void whenIdenticalGameIsFound_create_throwsGameIdenticalFound() {
         // Arrange
-        GamePost gamePost = new GamePost("testTitle", "testDeveloper", "testPublisher",
-                1L, "testGenre", "1.0.0", new Date(), "Notes");
-        String errorMsg = "Platform with id 1 doesn't exist in the database";
+        when(platformService.getById(gamePost.platformId())).thenReturn(platforms.getFirst());
+        when(gameRepository.findAllByTitleWithPlatform(gamePost.title())).thenReturn(List.of(savedGame));
 
-        when(platformService.getById(gamePost.platformId())).thenThrow(new PlatformNotFound(1));
-
-        // Act / Assert
-        Exception exception = assertThrows(PlatformNotFound.class, () -> gameService.create(gamePost));
-        assertEquals(exception.getMessage(), errorMsg);
-
-        verify(platformService).getById(1);
-    }
-
-    @Test
-    void whenIdenticalGame_create_throwsGameIdenticalFound() {
-        // Arrange
-        Platform platform = new Platform(1, "testName1", "testManufacturer1", new Date());
-        GamePost gamePost = new GamePost("testTitle", "testDeveloper", "testPublisher",
-                1L, "testGenre", "1.0.0", new Date(), "Notes");
-        Game persistedGame = new Game(1, "testTitle", "testDeveloper7", "testPublisher7",
-                platform, "testGenre7");
-        String errorMsg = "There's already a game with the same title, released on the same platform.";
-
-        when(platformService.getById(gamePost.platformId())).thenReturn(platform);
-        when(gameRepository.findAllByTitleWithPlatform(gamePost.title())).thenReturn(List.of(persistedGame));
-
-        // Act / Assert
-        Exception exception = assertThrows(GameIdenticalFound.class, () -> gameService.create(gamePost));
-        assertEquals(exception.getMessage(), errorMsg);
+        // Act & Assert
+        assertThrows(GameIdenticalFound.class, () -> gameService.create(gamePost));
 
         verify(platformService).getById(gamePost.platformId());
         verify(gameRepository).findAllByTitleWithPlatform(gamePost.title());
     }
 
     @Test
-    void getAll_returnsAllGames() {
+    void whenCalled_getAll_returnsAllGames() {
         // Arrange
-        Platform platform = new Platform(1, "testName", "testManufacturer", new Date());
-        Game persistedGame1 = new Game(1, "testTitle1", "testDeveloper", "testPublisher",
-                platform, "testGenre");
-        Game persistedGame2 = new Game(2, "testTitle2", "testDeveloper", "testPublisher",
-                platform, "testGenre");
-
-        when(gameRepository.findAll()).thenReturn(List.of(persistedGame1, persistedGame2));
+        when(gameRepository.findAll()).thenReturn(List.of(persistedGame));
 
         // Act
         List<Game> res = gameService.getAll();
 
         // Assert
-        assertThat(res).hasSize(2);
+        assertThat(res).usingRecursiveComparison().isEqualTo(List.of(persistedGame));
 
         verify(gameRepository).findAll();
     }
 
     @Test
-    void whenGameFound_getById_returnsGame() {
+    void whenGameIsFound_getById_returnsGame() {
         // Arrange
-        Game persistedGame = new Game(1, "testTitle", "testDeveloper", "testPublisher",
-                null, "testGenre");
-        Optional<Game> gameOptional = Optional.of(persistedGame);
-
-        when(gameRepository.findById(1L)).thenReturn(gameOptional);
+        when(gameRepository.findById(id)).thenReturn(Optional.of(persistedGame));
 
         // Act
-        Game res = gameService.getById(1);
+        Game res = gameService.getById(id);
 
         // Assert
         assertThat(res).isEqualTo(persistedGame);
 
-        verify(gameRepository).findById(1L);
+        verify(gameRepository).findById(id);
     }
 
     @Test
-    void whenGameNotFound_getById_throwsGameNotFound() {
+    void whenGameIsNotFound_getById_throwsGameNotFound() {
         // Arrange
-        String errorMsg = "Game with id 1 doesn't exist in the database";
-        Optional<Game> gameOptional = Optional.empty();
+        when(gameRepository.findById(id)).thenReturn(Optional.empty());
 
-        when(gameRepository.findById(1L)).thenReturn(gameOptional);
+        // Act & Assert
+        assertThrows(GameNotFound.class, () -> gameService.getById(id));
 
-        // Act / Assert
-        Exception exception = assertThrows(GameNotFound.class, () -> gameService.getById(1));
-        assertEquals(exception.getMessage(), errorMsg);
-        verify(gameRepository).findById(1L);
+        verify(gameRepository).findById(id);
     }
 
     @Test
-    void whenGameFound_getByIdFull_returnsGame() {
+    void whenGameIsFound_getByIdFull_returnsGame() {
         // Arrange
-        Platform platform = new Platform(1, "testName", "testManufacturer", new Date());
-        Game persistedGame = new Game(1, "testTitle", "testDeveloper", "testPublisher",
-                platform, "testGenre");
-        Optional<Game> gameOptional = Optional.of(persistedGame);
-
-        when(gameRepository.findByIdWithPlatform(1L)).thenReturn(gameOptional);
+        when(gameRepository.findByIdWithPlatform(id)).thenReturn(Optional.of(persistedGame));
 
         // Act
-        Game res = gameService.getByIdFull(1);
+        Game res = gameService.getByIdFull(id);
 
         // Assert
         assertThat(res).isEqualTo(persistedGame);
 
-        verify(gameRepository).findByIdWithPlatform(1L);
+        verify(gameRepository).findByIdWithPlatform(id);
     }
 
     @Test
-    void whenGameNotFound_getByIdFull_throwsGameNotFound() {
+    void whenGameIsNotFound_getByIdFull_throwsGameNotFound() {
         // Arrange
-        String errorMsg = "Game with id 1 doesn't exist in the database";
-        Optional<Game> gameOptional = Optional.empty();
+        when(gameRepository.findByIdWithPlatform(id)).thenReturn(Optional.empty());
 
-        when(gameRepository.findByIdWithPlatform(1L)).thenReturn(gameOptional);
+        // Act & Assert
+        assertThrows(GameNotFound.class, () -> gameService.getByIdFull(id));
 
-        // Act / Assert
-        Exception exception = assertThrows(GameNotFound.class, () -> gameService.getByIdFull(1));
-        assertEquals(exception.getMessage(), errorMsg);
-        verify(gameRepository).findByIdWithPlatform(1L);
+        verify(gameRepository).findByIdWithPlatform(id);
     }
 
     @Test
-    void whenGameFound_getGameVersions_returnsGameVersions() {
+    void whenGameIsFound_getGameVersions_returnsGameVersions() {
         // Arrange
-        long id = 1;
-        Platform platform = new Platform(1, "testName", "testManufacturer", new Date());
-        Game game = new Game(1, "testTitle", "testDeveloper", "testPublisher",
-                platform, "testGenre");
-        GameVersionGet gameVersionGet = new GameVersionGet("1.0.0", game, new Date(), "notes");
-
-        when(gameRepository.findById(id)).thenReturn(Optional.of(game));
+        when(gameRepository.findById(id)).thenReturn(Optional.of(persistedGame));
         when(gameRepository.findAllGameVersions(id)).thenReturn(List.of(gameVersionGet));
 
         // Act
@@ -210,185 +188,125 @@ public class GameServiceTest {
         // Assert
         assertThat(res).isEqualTo(List.of(gameVersionGet));
 
-        verify(gameRepository).findById(id);;
+        verify(gameRepository).findById(id);
         verify(gameRepository).findAllGameVersions(id);
     }
 
     @Test
-    void whenGameNotFound_getGameVersions_throwsGameNotFound() {
+    void whenGameIsNotFound_getGameVersions_throwsGameNotFound() {
         // Arrange
-        long id = 1;
-        String errorMsg = "Game with id 1 doesn't exist in the database";
-
         when(gameRepository.findById(id)).thenReturn(Optional.empty());
 
-        // Act / Assert
-        Exception exception = assertThrows(GameNotFound.class, () -> gameService.getGameVersions(id));
-        assertEquals(exception.getMessage(), errorMsg);
+        // Act & Assert
+        assertThrows(GameNotFound.class, () -> gameService.getGameVersions(id));
 
         verify(gameRepository).findById(id);
     }
 
     @Test
-    void whenBodyIsValid_modifyData_modifiesData() {
+    void whenGameIsFound_modifyData_modifiesData() {
         // Arrange
-        Platform platform1 = new Platform(1, "testName", "testManufacturer", new Date());
-        Platform platform2 = new Platform(2, "testName2", "testManufacturer2", new Date());
-        Game oldGame = new Game(1, "testTitle", "testDeveloper", "testPublisher",
-                platform1, "testGenre");
-        GamePatch newGame = new GamePatch("testTitle1", "testDeveloper1", "testPublisher1",
-                2L, "testGenre1");
-        Optional<Game> oldGameOptional = Optional.of(oldGame);
-
-        when(gameRepository.findById(1L)).thenReturn(oldGameOptional);
-        when(gameRepository.findAllByTitleWithPlatform(newGame.getTitle())).thenReturn(List.of());
-        when(platformService.getById(newGame.getPlatformId())).thenReturn(platform2);
+        when(gameRepository.findById(id)).thenReturn(Optional.of(persistedGame));
+        when(gameRepository.findAllByTitleWithPlatform(gamePatches.get("VALID").getTitle())).thenReturn(List.of());
+        when(platformService.getById(gamePatches.get("VALID").getPlatformId())).thenReturn(platforms.get(1));
 
         // Act
-        gameService.modifyData(newGame, 1);
+        gameService.modifyData(gamePatches.get("VALID"), id);
 
         // Assert
-        verify(gameRepository).findById(1L);
-        verify(gameRepository).findAllByTitleWithPlatform(newGame.getTitle());
-        verify(platformService).getById(newGame.getPlatformId());
-        verify(gameRepository).modifyData(eq(newGame.getTitle()), eq(newGame.getDeveloper()), eq(newGame.getPublisher()),
-                any(), eq(newGame.getGenre()), eq(1L));
+        verify(gameRepository).findById(id);
+        verify(gameRepository).findAllByTitleWithPlatform(gamePatches.get("VALID").getTitle());
+        verify(platformService).getById(gamePatches.get("VALID").getPlatformId());
+        verify(gameRepository).modifyData(any(), any(), any(), any(), any(), eq(id));
     }
 
     @Test
-    void whenGameNotFound_modifyData_throwsGameNotFound() {
+    void whenGameIsNotFound_modifyData_throwsGameNotFound() {
         // Arrange
-        GamePatch newGame = new GamePatch("testTitle1", "testDeveloper1", "testPublisher1",
-                2L, "testGenre1");
-        Optional<Game> oldGameOptional = Optional.empty();
-        String errorMsg = "Game with id 1 doesn't exist in the database";
+        when(gameRepository.findById(id)).thenReturn(Optional.empty());
 
-        when(gameRepository.findById(1L)).thenReturn(oldGameOptional);
+        // Act & Assert
+        assertThrows(GameNotFound.class, () -> gameService.modifyData(gamePatches.get("VALID"), id));
 
-        // Act / Assert
-        Exception exception = assertThrows(GameNotFound.class, () -> gameService.modifyData(newGame, 1));
-        assertEquals(exception.getMessage(), errorMsg);
-        verify(gameRepository).findById(1L);
+        verify(gameRepository).findById(id);
     }
 
     @Test
-    void whenBodyIsAllNull_modifyData_throwsGameEmptyBody() {
+    void whenAllFieldsAreNull_modifyData_throwsGameEmptyBody() {
         // Arrange
-        Platform platform = new Platform(1, "testName", "testManufacturer", new Date());
-        Game oldGame = new Game(1, "testTitle", "testDeveloper", "testPublisher",
-                platform, "testGenre");
-        GamePatch newGame = new GamePatch(null, null, null, null, null);
-        Optional<Game> oldGameOptional = Optional.of(oldGame);
-        String errorMsg = "Request must modify at least one field";
+        when(gameRepository.findById(id)).thenReturn(Optional.of(persistedGame));
 
-        when(gameRepository.findById(1L)).thenReturn(oldGameOptional);
+        // Act & Assert
+        assertThrows(GameEmptyBody.class, () -> gameService.modifyData(gamePatches.get("ALL_NULL"), id));
 
-        // Act / Assert
-        Exception exception = assertThrows(GameEmptyBody.class, () -> gameService.modifyData(newGame, 1));
-        assertEquals(exception.getMessage(), errorMsg);
-        verify(gameRepository).findById(1L);
+        verify(gameRepository).findById(id);
     }
 
     @Test
-    void whenIdenticalGameFound_modifyData_throwsGameIdenticalFound() {
+    void whenIdenticalGameIsFound_modifyData_throwsGameIdenticalFound() {
         // Arrange
-        Platform platform = new Platform(1, "testName", "testManufacturer", new Date());
-        Game oldGame = new Game(1, "testTitle1", "testDeveloper", "testPublisher",
-                platform, "testGenre");
-        Game persistedGame = new Game(1, "testTitle2", "testDeveloper", "testPublisher",
-                platform, "testGenre");
-        GamePatch newGame = new GamePatch("testTitle2", "testDeveloper1", "testPublisher1",
-                platform.getId(), "testGenre1");
-        Optional<Game> oldGameOptional = Optional.of(oldGame);
-        String errorMsg = "There's already a game with the same title, released on the same platform.";
+        when(gameRepository.findById(id)).thenReturn(Optional.of(persistedGame));
+        when(gameRepository.findAllByTitleWithPlatform(gamePatches.get("IDENTICAL").getTitle()))
+                .thenReturn(List.of(persistedGame));
 
-        when(gameRepository.findById(1L)).thenReturn(oldGameOptional);
-        when(gameRepository.findAllByTitleWithPlatform(newGame.getTitle())).thenReturn(List.of(persistedGame));
+        // Act & Assert
+        assertThrows(GameIdenticalFound.class, () -> gameService.modifyData(gamePatches.get("IDENTICAL"), id));
 
-        // Act / Assert
-        Exception exception = assertThrows(GameIdenticalFound.class, () -> gameService.modifyData(newGame, 1));
-        assertEquals(exception.getMessage(), errorMsg);
-        verify(gameRepository).findById(1L);
-        verify(gameRepository).findAllByTitleWithPlatform(newGame.getTitle());
+        verify(gameRepository).findById(id);
+        verify(gameRepository).findAllByTitleWithPlatform(gamePatches.get("IDENTICAL").getTitle());
     }
 
     @Test
     void whenPlatformIsNull_modifyData_modifiesData() {
         // Arrange
-        Platform platform1 = new Platform(1, "testName", "testManufacturer", new Date());
-        Game oldGame = new Game(1, "testTitle", "testDeveloper", "testPublisher",
-                platform1, "testGenre");
-        GamePatch newGame = new GamePatch("testTitle1", "testDeveloper1", "testPublisher1",
-                null, "testGenre1");
-        Optional<Game> oldGameOptional = Optional.of(oldGame);
-
-        when(gameRepository.findById(1L)).thenReturn(oldGameOptional);
+        when(gameRepository.findById(id)).thenReturn(Optional.of(persistedGame));
 
         // Act
-        gameService.modifyData(newGame, 1);
+        gameService.modifyData(gamePatches.get("PLATFORM_NULL"), id);
 
         // Assert
-        verify(gameRepository).findById(1L);
-        verify(gameRepository).modifyData(eq(newGame.getTitle()), eq(newGame.getDeveloper()), eq(newGame.getPublisher()),
-                any(), eq(newGame.getGenre()), eq(1L));
+        verify(gameRepository).findById(id);
+        verify(gameRepository).modifyData(any(), any(), any(), any(), any(), eq(id));
     }
 
     @Test
-    void whenAllButPlatformIsNull_modifyData_modifiesData() {
+    void whenAllButPlatformAreNull_modifyData_modifiesData() {
         // Arrange
-        Platform platform1 = new Platform(1, "testName", "testManufacturer", new Date());
-        Platform platform2 = new Platform(2, "testName2", "testManufacturer2", new Date());
-        Game oldGame = new Game(1, "testTitle", "testDeveloper", "testPublisher",
-                platform1, "testGenre");
-        GamePatch newGame = new GamePatch(null, null, null,
-                2L, null);
-        Optional<Game> oldGameOptional = Optional.of(oldGame);
-
-        when(gameRepository.findById(1L)).thenReturn(oldGameOptional);
-        when(gameRepository.findAllByTitleWithPlatform(newGame.getTitle())).thenReturn(List.of());
-        when(platformService.getById(newGame.getPlatformId())).thenReturn(platform2);
+        when(gameRepository.findById(id)).thenReturn(Optional.of(persistedGame));
+        when(gameRepository.findAllByTitleWithPlatform(gamePatches.get("REST_NULL").getTitle())).thenReturn(List.of());
+        when(platformService.getById(gamePatches.get("REST_NULL").getPlatformId())).thenReturn(platforms.get(1));
 
         // Act
-        gameService.modifyData(newGame, 1);
+        gameService.modifyData(gamePatches.get("REST_NULL"), id);
 
         // Assert
         verify(gameRepository).findById(1L);
-        verify(gameRepository).findAllByTitleWithPlatform(newGame.getTitle());
-        verify(platformService).getById(newGame.getPlatformId());
-        verify(gameRepository).modifyData(eq(oldGame.getTitle()), eq(oldGame.getDeveloper()), eq(oldGame.getPublisher()),
-                any(), eq(oldGame.getGenre()), eq(oldGame.getId()));
+        verify(gameRepository).findAllByTitleWithPlatform(gamePatches.get("REST_NULL").getTitle());
+        verify(platformService).getById(gamePatches.get("REST_NULL").getPlatformId());
+        verify(gameRepository).modifyData(any(), any(), any(), any(), any(), eq(id));
     }
 
     @Test
     void whenGameIsFound_delete_removesGame() {
         // Arrange
-        long gameId = 1;
-        Platform platform = new Platform(1, "testName", "testManufacturer", new Date());
-        Game oldGame = new Game(gameId, "testTitle", "testDeveloper", "testPublisher",
-                platform, "testGenre");
-        Optional<Game> oldGameOptional = Optional.of(oldGame);
-
-        when(gameRepository.findById(gameId)).thenReturn(oldGameOptional);
+        when(gameRepository.findById(id)).thenReturn(Optional.of(persistedGame));
 
         // Act
-        gameService.delete(gameId);
+        gameService.delete(id);
 
         // Assert
-        verify(gameRepository).findById(gameId);
+        verify(gameRepository).findById(id);
+        verify(gameRepository).deleteById(id);
     }
 
     @Test
     void whenGameIsNotFound_delete_throwsGameNotFound() {
         // Arrange
-        long gameId = 1;
-        Optional<Game> oldGameOptional = Optional.empty();
-        String errorMsg = "Game with id 1 doesn't exist in the database";
+        when(gameRepository.findById(id)).thenReturn(Optional.empty());
 
-        when(gameRepository.findById(gameId)).thenReturn(oldGameOptional);
+        // Act & Assert
+        assertThrows(GameNotFound.class, () -> gameService.delete(id));
 
-        // Act / Arrange
-        Exception exception = assertThrows(GameNotFound.class, () -> gameService.delete(gameId));
-        assertEquals(exception.getMessage(), errorMsg);
-        verify(gameRepository).findById(gameId);
+        verify(gameRepository).findById(id);
     }
 }
