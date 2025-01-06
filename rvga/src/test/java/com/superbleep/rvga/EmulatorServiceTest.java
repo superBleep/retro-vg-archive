@@ -8,10 +8,12 @@ import com.superbleep.rvga.exception.EmulatorEmptyPlatformList;
 import com.superbleep.rvga.exception.EmulatorNotFound;
 import com.superbleep.rvga.exception.PlatformNotFound;
 import com.superbleep.rvga.model.Emulator;
+import com.superbleep.rvga.model.Game;
 import com.superbleep.rvga.model.Platform;
 import com.superbleep.rvga.repository.EmulatorRepository;
 import com.superbleep.rvga.service.EmulatorPlatformService;
 import com.superbleep.rvga.service.EmulatorService;
+import com.superbleep.rvga.service.GameService;
 import com.superbleep.rvga.service.PlatformService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -45,6 +47,8 @@ public class EmulatorServiceTest {
     @Mock
     private PlatformService platformService;
     @Mock
+    private GameService gameService;
+    @Mock
     private EmulatorPlatformService emulatorPlatformService;
 
     private static long id;
@@ -54,6 +58,7 @@ public class EmulatorServiceTest {
     private static Map<String, EmulatorPatch> emulatorPatches;
     private static Platform platform;
     private static List<Long> platformIds;
+    private static Game game;
 
     @BeforeAll
     public static void setUp() {
@@ -69,6 +74,7 @@ public class EmulatorServiceTest {
                 "REST_NULL", new EmulatorPatch("name1", null, null),
                 "ALL_NULL", new EmulatorPatch(null, null, null)
         );
+        game = new Game(1L, "title", "developer", "publisher", platform, "genre");
     }
 
     @Test
@@ -144,6 +150,26 @@ public class EmulatorServiceTest {
         assertThrows(EmulatorNotFound.class, () -> emulatorService.getById(id));
 
         verify(emulatorRepository).findById(id);
+    }
+
+    @Test
+    public void whenAllFound_isGameOnEmulator_returnsBoolean() {
+        // Arrange
+        when(emulatorRepository.findById(id)).thenReturn(Optional.of(emulator));
+        when(emulatorRepository.findAllPlatformIds(id)).thenReturn(List.of(platform.getId()));
+        when(gameService.getById(game.getId())).thenReturn(game);
+        when(emulatorRepository.isGameOnEmulator(id, game.getId())).thenReturn(Optional.of(game));
+
+        // Act
+        Boolean res = emulatorService.isGameOnEmulator(id, game.getId());
+
+        // Assert
+        assertThat(res).isEqualTo(true);
+
+        verify(emulatorRepository).findById(id);
+        verify(emulatorRepository).findAllPlatformIds(id);
+        verify(gameService).getById(game.getId());
+        verify(emulatorRepository).isGameOnEmulator(id, game.getId());
     }
 
     @Test

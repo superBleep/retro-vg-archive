@@ -8,6 +8,7 @@ import com.superbleep.rvga.exception.EmulatorEmptyPlatformList;
 import com.superbleep.rvga.exception.EmulatorNotFound;
 import com.superbleep.rvga.model.Emulator;
 import com.superbleep.rvga.model.EmulatorPlatform;
+import com.superbleep.rvga.model.Game;
 import com.superbleep.rvga.model.Platform;
 import com.superbleep.rvga.repository.EmulatorRepository;
 import jakarta.transaction.Transactional;
@@ -17,16 +18,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
+
 @Service
 public class EmulatorService {
     private final EmulatorRepository emulatorRepository;
     private final PlatformService platformService;
+    private final GameService gameService;
     private final EmulatorPlatformService emulatorPlatformService;
 
     public EmulatorService(EmulatorRepository emulatorRepository, PlatformService platformService,
-                           EmulatorPlatformService emulatorPlatformService) {
+                           GameService gameService, EmulatorPlatformService emulatorPlatformService) {
         this.emulatorRepository = emulatorRepository;
         this.platformService = platformService;
+        this.gameService = gameService;
         this.emulatorPlatformService = emulatorPlatformService;
     }
 
@@ -72,6 +77,15 @@ public class EmulatorService {
             return new EmulatorGet(emulator, platformIds);
         } else
             throw new EmulatorNotFound(id);
+    }
+
+    public boolean isGameOnEmulator(long emulatorId, long gameId) {
+        this.getById(emulatorId);
+        gameService.getById(gameId);
+
+        Optional<Game> optional = emulatorRepository.isGameOnEmulator(emulatorId, gameId);
+
+        return optional.isPresent();
     }
 
     @Transactional

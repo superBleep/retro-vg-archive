@@ -8,6 +8,7 @@ import com.superbleep.rvga.util.InvalidFieldsResponse;
 import com.superbleep.rvga.util.InvalidValuesResponse;
 import com.superbleep.rvga.util.MessageResponse;
 import com.superbleep.rvga.util.SqlResponse;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -63,6 +64,21 @@ public class GeneralExceptionHandler {
                 .body(res);
     }
 
+    @ExceptionHandler({ConstraintViolationException.class})
+    public ResponseEntity<Object> handle(ConstraintViolationException e) {
+        Map<String, String> errors = new HashMap<>();
+
+        e.getConstraintViolations().forEach(violation ->
+                errors.put(violation.getPropertyPath().toString(), violation.getMessage())
+        );
+
+        InvalidFieldsResponse res = new InvalidFieldsResponse(errors);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(res);
+    }
+
     @ExceptionHandler({MethodArgumentTypeMismatchException.class})
     public ResponseEntity<Object> handle(TypeMismatchException e) {
         MessageResponse res = new MessageResponse(STR."Value \{e.getValue()} of parameter \{e.getPropertyName()} is invalid.");
@@ -84,7 +100,7 @@ public class GeneralExceptionHandler {
     @ExceptionHandler({ArchiveUserPasswordsIdentical.class,
             ArchiveUserEmptyBody.class, ArchiveUserRolesIdentical.class, ArchiveUserRoleNotFound.class,
             PlatformEmptyBody.class, GameVersionEmptyBody.class, GameVersionOnlyOne.class, EmulatorNotFound.class,
-            EmulatorEmptyBody.class, EmulatorEmptyPlatformList.class})
+            EmulatorEmptyBody.class, EmulatorEmptyPlatformList.class, ReviewGameNotOnEmulator.class})
     public ResponseEntity<Object> handle(BadRequestException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 

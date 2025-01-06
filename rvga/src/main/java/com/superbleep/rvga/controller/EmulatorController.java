@@ -65,6 +65,20 @@ public class EmulatorController {
         return emulatorService.getById(id);
     }
 
+    @Operation(summary = "Check game existance", description = "Check if the a game (identified by its id)" +
+            "has or hasn't a platform bound to the supplied emulator (also identified by its id)")
+    @Parameters(value = {
+            @Parameter(name = "id", description = "Emulator's id"),
+            @Parameter(name = "gameId", description = "Game's id")})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Search successfull"),
+            @ApiResponse(responseCode = "404", description = "Emulator / Game not found",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class)))})
+    @GetMapping("/{id}/games/{gameId}")
+    public ResponseEntity<Boolean> isGameOnEmulator(@PathVariable Long id, @PathVariable Long gameId) {
+        return ResponseEntity.ok(emulatorService.isGameOnEmulator(id, gameId));
+    }
+
     @Operation(summary = "Modify emulator data", description = "Modify an emulators's data. If some of the fields are " +
             "null, they will be replaced with their old values")
     @Parameter(name = "id", description = "Emulator's id")

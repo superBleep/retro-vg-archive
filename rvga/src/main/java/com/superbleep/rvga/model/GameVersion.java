@@ -1,5 +1,6 @@
 package com.superbleep.rvga.model;
 
+import com.superbleep.rvga.dto.GameVersionGet;
 import com.superbleep.rvga.dto.GameVersionPost;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -41,6 +42,13 @@ public class GameVersion {
         this.game = game;
         this.release = gameVersionPost.release();
         this.notes = gameVersionPost.notes();
+    }
+
+    public GameVersion(GameVersionGet gameVersionGet) {
+        this.id = new GameVersionId(gameVersionGet.id(), gameVersionGet.game().getId());
+        this.game = gameVersionGet.game();
+        this.release = gameVersionGet.release();
+        this.notes = gameVersionGet.notes();
     }
 
     public GameVersionId getId() {
