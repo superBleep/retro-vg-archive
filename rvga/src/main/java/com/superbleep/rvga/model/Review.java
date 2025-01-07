@@ -1,12 +1,11 @@
 package com.superbleep.rvga.model;
 
-import com.superbleep.rvga.dto.ReviewPost;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Range;
 
 import java.sql.Timestamp;
@@ -28,7 +27,7 @@ public class Review {
     })
     private GameVersion gameVersion;
     @Column(name = "creation_date")
-    @CreationTimestamp
+    @UpdateTimestamp
     private Timestamp creationDate;
     @ManyToOne
     @JoinColumn(name = "emulator_id")

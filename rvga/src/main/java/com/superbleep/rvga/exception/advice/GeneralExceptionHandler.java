@@ -29,7 +29,8 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GeneralExceptionHandler {
-    @ExceptionHandler({ArchiveUserNotFound.class, PlatformNotFound.class, GameNotFound.class, GameVersionNotFound.class})
+    @ExceptionHandler({ArchiveUserNotFound.class, PlatformNotFound.class, GameNotFound.class,
+            GameVersionNotFound.class, EmulatorNotFound.class, ReviewNotFound.class})
     public ResponseEntity<Object> handle(NotFoundException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 
@@ -99,8 +100,9 @@ public class GeneralExceptionHandler {
 
     @ExceptionHandler({ArchiveUserPasswordsIdentical.class,
             ArchiveUserEmptyBody.class, ArchiveUserRolesIdentical.class, ArchiveUserRoleNotFound.class,
-            PlatformEmptyBody.class, GameVersionEmptyBody.class, GameVersionOnlyOne.class, EmulatorNotFound.class,
-            EmulatorEmptyBody.class, EmulatorEmptyPlatformList.class, ReviewGameNotOnEmulator.class})
+            PlatformEmptyBody.class, GameEmptyBody.class, GameVersionEmptyBody.class, GameVersionOnlyOne.class,
+            EmulatorEmptyBody.class, EmulatorEmptyPlatformList.class, ReviewGameNotOnEmulator.class,
+            ReviewEmptyBody.class})
     public ResponseEntity<Object> handle(BadRequestException e) {
         MessageResponse res = new MessageResponse(e.getMessage());
 
