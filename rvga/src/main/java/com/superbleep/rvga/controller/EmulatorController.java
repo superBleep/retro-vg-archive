@@ -66,7 +66,7 @@ public class EmulatorController {
     }
 
     @Operation(summary = "Check game existance", description = "Check if the a game (identified by its id)" +
-            "has or hasn't a platform bound to the supplied emulator (also identified by its id)")
+            " has or doesn't have a platform bound to the supplied emulator (also identified by its id)")
     @Parameters(value = {
             @Parameter(name = "id", description = "Emulator's id"),
             @Parameter(name = "gameId", description = "Game's id")})
