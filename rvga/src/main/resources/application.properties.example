@@ -5,3 +5,7 @@ spring.datasource.username=?
 spring.datasource.password=?
 spring.jpa.hibernate.ddl-auto=?
 springdoc.default-produces-media-type=application/json
+springdoc.swagger-ui.defaultModelsExpandDepth=-1
+spring.jackson.mapper.sort-properties-alphabetically=false
+spring.messages.basename=messages
+spring.messages.encoding=UTF-8
